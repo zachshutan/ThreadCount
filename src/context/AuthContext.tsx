@@ -19,14 +19,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("[AuthContext] starting getSession");
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
+        console.log("[AuthContext] getSession resolved, session=", session ? "present" : "null");
         setSession(session);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.log("[AuthContext] getSession error:", err);
         // Session fetch failed — treat as unauthenticated
       })
       .finally(() => {
+        console.log("[AuthContext] loading=false");
         setLoading(false);
       });
 

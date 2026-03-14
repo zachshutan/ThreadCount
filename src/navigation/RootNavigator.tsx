@@ -11,11 +11,12 @@ const RootStack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   const { session, loading } = useAuth();
+  console.log("[RootNavigator] render — loading=", loading, "session=", session ? "present" : "null");
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "white" }} className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" />
       </View>
     );
   }
