@@ -1,0 +1,22 @@
+insert into subtypes (name, category) values
+  -- footwear
+  ('Sneaker',  'footwear'),
+  ('Boot',     'footwear'),
+  ('Sandal',   'footwear'),
+  ('Loafer',   'footwear'),
+  ('Slipper',  'footwear'),
+  ('Other',    'footwear'),
+  -- tops
+  ('T-Shirt',  'top'),
+  ('Shirt',    'top'),
+  ('Jacket',   'top'),
+  ('Hoodie',   'top'),
+  ('Sweater',  'top'),
+  ('Coat',     'top'),
+  ('Other',    'top'),
+  -- bottoms
+  ('Jeans',    'bottom'),
+  ('Pants',    'bottom'),
+  ('Shorts',   'bottom'),
+  ('Skirt',    'bottom'),
+  ('Other',    'bottom');
