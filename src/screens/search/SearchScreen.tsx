@@ -1,10 +1,92 @@
 import React from "react";
-import { View, Text } from "react-native";
+import {
+  View, Text, TextInput, TouchableOpacity, SectionList, ActivityIndicator,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useSearch } from "../../hooks/useSearch";
 
 export default function SearchScreen() {
+  const navigation = useNavigation<any>();
+  const { query, results, loading, runSearch } = useSearch();
+
+  const sections = [
+    {
+      title: "Brands",
+      data: results.brands,
+      renderItem: ({ item }: any) => (
+        <TouchableOpacity
+          className="flex-row items-center py-3 px-4 border-b border-gray-100"
+          onPress={() =>
+            navigation.navigate("Browse", {
+              screen: "Brand",
+              params: { brandId: item.id, brandName: item.name },
+            })
+          }
+        >
+          <Text className="font-medium">{item.name}</Text>
+        </TouchableOpacity>
+      ),
+    },
+    {
+      title: "Items",
+      data: results.items,
+      renderItem: ({ item }: any) => (
+        <TouchableOpacity
+          className="flex-row items-center py-3 px-4 border-b border-gray-100"
+          onPress={() =>
+            navigation.navigate("Browse", {
+              screen: "Item",
+              params: { itemId: item.id },
+            })
+          }
+        >
+          <View>
+            <Text className="font-medium">{item.model_name}</Text>
+            <Text className="text-sm text-gray-500">
+              {item.brands?.name} · {item.category}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      ),
+    },
+  ].filter((s) => s.data.length > 0);
+
+  const hasQuery = query.trim().length > 0;
+
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text className="text-lg font-semibold">Search</Text>
+    <View className="flex-1 bg-white">
+      {/* Search input */}
+      <View className="p-4 border-b border-gray-100">
+        <TextInput
+          className="bg-gray-100 rounded-xl px-4 py-3 text-base"
+          placeholder="Search brands or items…"
+          value={query}
+          onChangeText={runSearch}
+          autoCapitalize="none"
+          returnKeyType="search"
+        />
+      </View>
+
+      {loading ? (
+        <ActivityIndicator className="mt-8" />
+      ) : !hasQuery ? (
+        <Text className="text-center text-gray-400 mt-12">Start typing to search.</Text>
+      ) : sections.length === 0 ? (
+        <Text className="text-center text-gray-400 mt-12">No results for "{query}"</Text>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item: any) => item.id}
+          renderSectionHeader={({ section: { title } }) => (
+            <View className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+              <Text className="font-semibold text-sm text-gray-500 uppercase tracking-wide">
+                {title}
+              </Text>
+            </View>
+          )}
+          renderItem={({ item, section }: any) => section.renderItem({ item })}
+        />
+      )}
     </View>
   );
 }
