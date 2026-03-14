@@ -7,6 +7,7 @@ import BrandScreen from "../screens/browse/BrandScreen";
 import ItemScreen from "../screens/browse/ItemScreen";
 import ClosetScreen from "../screens/closet/ClosetScreen";
 import ItemDetailScreen from "../screens/closet/ItemDetailScreen";
+import WriteReviewScreen from "../screens/closet/WriteReviewScreen";
 import ComparisonScreen from "../screens/compare/ComparisonScreen";
 import SearchScreen from "../screens/search/SearchScreen";
 
@@ -19,6 +20,7 @@ export type BrowseStackParamList = {
 export type ClosetStackParamList = {
   ClosetList: undefined;
   ItemDetail: { closetEntryId: string };
+  WriteReview: { itemId: string };
 };
 
 export type MainTabsParamList = {
@@ -48,6 +50,7 @@ function ClosetNavigator() {
     <ClosetStack.Navigator>
       <ClosetStack.Screen name="ClosetList" component={ClosetScreen} options={{ title: "My Closet" }} />
       <ClosetStack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: "Item Details" }} />
+      <ClosetStack.Screen name="WriteReview" component={WriteReviewScreen} options={{ title: "Write Review" }} />
     </ClosetStack.Navigator>
   );
 }

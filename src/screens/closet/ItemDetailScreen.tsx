@@ -1,22 +1,34 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  View, Text, ScrollView, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, ActivityIndicator,
 } from "react-native";
-import { RouteProp } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { ClosetStackParamList } from "../../navigation/MainTabs";
-import { useScores } from "../../hooks/useScores";
+import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native";
 import { useCloset } from "../../hooks/useCloset";
+import { useScores } from "../../hooks/useScores";
+import {
+  getComparisonHistory,
+  type ComparisonHistoryEntry,
+} from "../../services/closetService";
 
-type Props = {
-  route: RouteProp<ClosetStackParamList, "ItemDetail">;
-  navigation: NativeStackNavigationProp<ClosetStackParamList, "ItemDetail">;
-};
+type ItemDetailRouteParams = { closetEntryId: string };
 
-export default function ItemDetailScreen({ route }: Props) {
+export default function ItemDetailScreen() {
+  const route = useRoute<RouteProp<{ ItemDetail: ItemDetailRouteParams }, "ItemDetail">>();
+  const navigation = useNavigation<any>();
   const { closetEntryId } = route.params;
+
   const { entries, loading: closetLoading } = useCloset();
   const { score, loading: scoreLoading } = useScores(closetEntryId);
+
+  const [history, setHistory] = useState<ComparisonHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  useEffect(() => {
+    getComparisonHistory(closetEntryId).then((h) => {
+      setHistory(h);
+      setHistoryLoading(false);
+    });
+  }, [closetEntryId]);
 
   const entry = entries.find((e) => e.id === closetEntryId);
 
@@ -35,7 +47,7 @@ export default function ItemDetailScreen({ route }: Props) {
   return (
     <ScrollView className="flex-1 bg-white p-4">
       <Text className="text-2xl font-bold mb-1">{entry.items?.model_name}</Text>
-      <Text className="text-gray-500 mb-6">
+      <Text className="text-gray-500 mb-4">
         {entry.items?.brands?.name} · {entry.color}
       </Text>
 
@@ -66,13 +78,39 @@ export default function ItemDetailScreen({ route }: Props) {
         <Text className="text-gray-400 mb-6">No comparisons yet.</Text>
       )}
 
-      {/* Placeholder for comparison history — populated in a later pass */}
-      <Text className="text-lg font-semibold mb-2">Comparison History</Text>
-      <Text className="text-gray-400 text-sm">
-        Comparison history will appear here after you make comparisons.
-      </Text>
+      {/* Write Review button */}
+      <TouchableOpacity
+        className="bg-black rounded-xl py-3 items-center mb-6"
+        onPress={() => navigation.navigate("WriteReview", { itemId: entry.item_id })}
+      >
+        <Text className="text-white font-semibold">Write Review</Text>
+      </TouchableOpacity>
 
-      {/* Review option — implemented in Plan 3 */}
+      {/* Comparison history */}
+      <Text className="text-lg font-semibold mb-3">Comparison History</Text>
+      {historyLoading ? (
+        <ActivityIndicator />
+      ) : history.length === 0 ? (
+        <Text className="text-gray-400">No comparisons yet.</Text>
+      ) : (
+        history.map((h) => (
+          <View key={h.id} className="flex-row items-center py-2 border-b border-gray-100">
+            <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+              h.outcome === "win" ? "bg-green-100" : "bg-red-100"
+            }`}>
+              <Text className={h.outcome === "win" ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                {h.outcome === "win" ? "W" : "L"}
+              </Text>
+            </View>
+            <View className="flex-1">
+              <Text className="font-medium">{h.opponentItemName}</Text>
+              <Text className="text-xs text-gray-400 capitalize">
+                {h.comparisonType.replace("_", " ")}
+              </Text>
+            </View>
+          </View>
+        ))
+      )}
     </ScrollView>
   );
 }

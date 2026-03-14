@@ -17,7 +17,7 @@ export default function ItemScreen({ route }: Props) {
   const { itemId } = route.params;
   const { item, scores, loading, error } = useItem(itemId);
   const { images } = useItemImages(itemId);
-  const { reviews } = useItemReviews(itemId);
+  const { reviews, loading: reviewsLoading } = useItemReviews(itemId);
 
   if (loading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
@@ -78,7 +78,9 @@ export default function ItemScreen({ route }: Props) {
 
         {/* Reviews */}
         <Text className="text-lg font-semibold mt-6 mb-3">Reviews</Text>
-        {reviews.length === 0 ? (
+        {reviewsLoading ? (
+          <ActivityIndicator />
+        ) : reviews.length === 0 ? (
           <Text className="text-gray-400 text-sm">No reviews yet.</Text>
         ) : (
           reviews.map((review) => (
