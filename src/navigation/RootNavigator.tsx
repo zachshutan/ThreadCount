@@ -1,9 +1,13 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { useAuth } from "../context/AuthContext";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
+import { useAuth } from "../context/AuthContext";
 import AuthStack from "./AuthStack";
 import MainTabs from "./MainTabs";
+import PublicClosetScreen from "../screens/PublicClosetScreen";
+
+const RootStack = createNativeStackNavigator();
 
 export default function RootNavigator() {
   const { session, loading } = useAuth();
@@ -18,7 +22,18 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      {session ? <MainTabs /> : <AuthStack />}
+      {session ? (
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
+          <RootStack.Screen
+            name="PublicCloset"
+            component={PublicClosetScreen}
+            options={{ headerShown: true, title: "Closet", presentation: "modal" }}
+          />
+        </RootStack.Navigator>
+      ) : (
+        <AuthStack />
+      )}
     </NavigationContainer>
   );
 }
