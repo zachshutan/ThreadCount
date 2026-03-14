@@ -171,7 +171,7 @@ See `ARCHITECTURE.md` for the full breakdown.
 
 ## Project-Specific Notes
 
-- **Supabase project ref:** `wvdpkilazxeezilqdqzm` (region: us-west-1)
+- **Supabase project ref:** `rwmrptlhcnmikqoozlcc`
 - **App scheme:** `threadcount://`
 - **Bundle ID (iOS):** `com.threadcount.app`
 - **Android package:** `com.threadcount.app`

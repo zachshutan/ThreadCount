@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getCloset, type ClosetEntry } from "../services/closetService";
 import { useAuth } from "./useAuth";
 
@@ -19,8 +19,8 @@ export function useCloset() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const owned = entries.filter((e) => e.entry_type === "owned");
-  const interested = entries.filter((e) => e.entry_type === "interested");
+  const owned = useMemo(() => entries.filter((e) => e.entry_type === "owned"), [entries]);
+  const interested = useMemo(() => entries.filter((e) => e.entry_type === "interested"), [entries]);
 
   return { entries, owned, interested, loading, error, refresh };
 }

@@ -4,7 +4,7 @@ import { getFeed, type FeedEvent, type FeedCursor } from "../services/feedServic
 export function useFeed() {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(true);
   const [nextCursor, setNextCursor] = useState<FeedCursor | null>(null);
   const [friendsOnly, setFriendsOnly] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -16,6 +16,8 @@ export function useFeed() {
         setEvents((prev) => (replace ? result.data! : [...prev, ...result.data!]));
         setNextCursor(result.nextCursor);
         setHasMore(result.nextCursor !== null);
+      } else {
+        setHasMore(false);
       }
     },
     []

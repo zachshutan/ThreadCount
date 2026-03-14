@@ -44,6 +44,14 @@ export default function ForYouFeedScreen() {
     refresh();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (refreshing && events.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-white">
       {/* Everyone / Friends toggle */}

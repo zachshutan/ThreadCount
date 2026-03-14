@@ -17,15 +17,22 @@ export default function SignUpScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handleSignUp() {
+    console.log("[SignUpScreen] handleSignUp called, email=", email, "password length=", password.length);
     if (!email || !password) {
       Alert.alert("Error", "Please enter an email and password.");
       return;
     }
     setLoading(true);
     const { error } = await signUp(email, password);
+    console.log("[SignUpScreen] signUp result error=", error);
     setLoading(false);
     if (error) {
       Alert.alert("Sign up failed", error.message);
+    } else {
+      Alert.alert(
+        "Check your email",
+        "We sent a confirmation link to " + email + ". Click it to activate your account, then come back and log in."
+      );
     }
     // On success, AuthContext detects the new session and navigates automatically
   }

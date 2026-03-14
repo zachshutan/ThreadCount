@@ -17,15 +17,19 @@ export default function LogInScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogIn() {
+    console.log("[LogInScreen] handleLogIn called, email=", email);
     if (!email || !password) {
       Alert.alert("Error", "Please enter your email and password.");
       return;
     }
     setLoading(true);
     const { error } = await signIn(email, password);
+    console.log("[LogInScreen] signIn result error=", error);
     setLoading(false);
     if (error) {
       Alert.alert("Log in failed", error.message);
+    } else {
+      console.log("[LogInScreen] signIn success — waiting for AuthContext to detect session");
     }
   }
 
