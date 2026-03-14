@@ -2,6 +2,7 @@ import {
   getCloset,
   addToCloset,
   upgradeToOwned,
+  getComparisonHistory,
 } from "../../services/closetService";
 import { supabase } from "../../lib/supabase";
 
@@ -75,6 +76,56 @@ describe("addToCloset", () => {
       color: "black",
     });
     expect(result.error).not.toBeNull();
+  });
+});
+
+describe("getComparisonHistory", () => {
+  it("fetches comparisons for an entry with joined item names", async () => {
+    const mockComparison = {
+      id: "comp-1",
+      winner_entry_id: "entry-1",
+      loser_entry_id: "entry-2",
+      comparison_type: "same_category",
+      created_at: "2026-01-01T00:00:00Z",
+      winner_entry: { item_id: "item-1", items: { model_name: "Air Force 1" } },
+      loser_entry: { item_id: "item-2", items: { model_name: "Stan Smith" } },
+    };
+
+    mockFrom.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        or: jest.fn().mockReturnValue({
+          order: jest.fn().mockResolvedValue({ data: [mockComparison], error: null }),
+        }),
+      }),
+    });
+
+    const result = await getComparisonHistory("entry-1");
+    expect(result).toHaveLength(1);
+    expect(result[0].outcome).toBe("win");
+    expect(result[0].opponentItemName).toBe("Stan Smith");
+  });
+
+  it("returns 'Unknown item' when opponent entry was deleted (null FK)", async () => {
+    const mockComparison = {
+      id: "comp-2",
+      winner_entry_id: "entry-1",
+      loser_entry_id: null,
+      comparison_type: "cross_category",
+      created_at: "2026-01-01T00:00:00Z",
+      winner_entry: { item_id: "item-1", items: { model_name: "Air Force 1" } },
+      loser_entry: null,
+    };
+
+    mockFrom.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        or: jest.fn().mockReturnValue({
+          order: jest.fn().mockResolvedValue({ data: [mockComparison], error: null }),
+        }),
+      }),
+    });
+
+    const result = await getComparisonHistory("entry-1");
+    expect(result[0].opponentItemName).toBe("Unknown item");
   });
 });
 

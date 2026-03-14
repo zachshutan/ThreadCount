@@ -62,6 +62,44 @@ export async function upgradeToOwned(
   return { data, error };
 }
 
+export type ComparisonHistoryEntry = {
+  id: string;
+  outcome: "win" | "loss";
+  comparisonType: "same_category" | "cross_category";
+  opponentItemName: string;
+  createdAt: string;
+};
+
+export async function getComparisonHistory(
+  entryId: string
+): Promise<ComparisonHistoryEntry[]> {
+  const { data, error } = await supabase
+    .from("comparisons")
+    .select(
+      `id, winner_entry_id, loser_entry_id, comparison_type, created_at,
+       winner_entry:closet_entries!winner_entry_id(item_id, items(model_name)),
+       loser_entry:closet_entries!loser_entry_id(item_id, items(model_name))`
+    )
+    .or(`winner_entry_id.eq.${entryId},loser_entry_id.eq.${entryId}`)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row: any) => {
+    const isWinner = row.winner_entry_id === entryId;
+    const opponentEntry = isWinner ? row.loser_entry : row.winner_entry;
+    const opponentName = opponentEntry?.items?.model_name ?? "Unknown item";
+
+    return {
+      id: row.id,
+      outcome: isWinner ? "win" : "loss",
+      comparisonType: row.comparison_type,
+      opponentItemName: opponentName,
+      createdAt: row.created_at,
+    };
+  });
+}
+
 export async function getClosetEntryForItem(
   userId: string,
   itemId: string
