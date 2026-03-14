@@ -9,6 +9,7 @@ type Props = {
 };
 
 export default function WelcomeScreen({ navigation }: Props) {
+  console.log("[WelcomeScreen] rendering");
   const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleGoogleSignIn() {
@@ -19,7 +20,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   }
 
   return (
-    <View className="flex-1 bg-white items-center justify-center px-6">
+    <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }} className="flex-1 bg-white items-center justify-center px-6">
       <Text className="text-4xl font-bold mb-2">Threadcount</Text>
       <Text className="text-base text-gray-500 mb-12 text-center">
         Rate what you own. Discover what's next.
