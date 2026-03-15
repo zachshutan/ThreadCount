@@ -11,10 +11,12 @@ function EventCard({
   event,
   onUserPress,
   onItemPress,
+  onCardPress,
 }: {
   event: FeedEvent;
   onUserPress: () => void;
   onItemPress?: () => void;
+  onCardPress?: () => void;
 }) {
   const descriptionParts: Record<FeedEvent["event_type"], { prefix: string; suffix: string }> = {
     closet_add: { prefix: "added ", suffix: " to their closet" },
@@ -28,33 +30,35 @@ function EventCard({
   const { prefix, suffix } = descriptionParts[event.event_type];
 
   return (
-    <View className="p-4 border-b border-gray-100">
-      <View className="flex-row items-center mb-1 flex-wrap">
-        <TouchableOpacity onPress={onUserPress}>
-          <Text className="font-semibold text-sm">{event.username}</Text>
-        </TouchableOpacity>
-        <Text className="text-gray-500 text-sm ml-1">
-          {prefix}
-          <Text
-            className={`font-semibold${onItemPress ? " underline" : ""}`}
-            onPress={onItemPress}
-          >
-            {event.item_name}
+    <TouchableOpacity onPress={onCardPress} activeOpacity={0.95}>
+      <View className="p-4 border-b border-gray-100">
+        <View className="flex-row items-center mb-1 flex-wrap">
+          <TouchableOpacity onPress={onUserPress}>
+            <Text className="font-semibold text-sm">{event.username}</Text>
+          </TouchableOpacity>
+          <Text className="text-gray-500 text-sm ml-1">
+            {prefix}
+            <Text
+              className={`font-semibold${onItemPress ? " underline" : ""}`}
+              onPress={onItemPress}
+            >
+              {event.item_name}
+            </Text>
+            {suffix}
           </Text>
-          {suffix}
-        </Text>
+        </View>
+        {event.brand_name && (
+          <Text className="text-xs text-gray-400">
+            {event.brand_name} · {event.category}
+          </Text>
+        )}
+        {event.event_type === "review" && event.review_body && (
+          <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>
+            "{event.review_body}"
+          </Text>
+        )}
       </View>
-      {event.brand_name && (
-        <Text className="text-xs text-gray-400">
-          {event.brand_name} · {event.category}
-        </Text>
-      )}
-      {event.event_type === "review" && event.review_body && (
-        <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>
-          "{event.review_body}"
-        </Text>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -113,6 +117,7 @@ export default function ForYouFeedScreen() {
                     })
                 : undefined
             }
+            onCardPress={() => navigation.navigate("PostDetail", { event })}
           />
         )}
         refreshControl={
