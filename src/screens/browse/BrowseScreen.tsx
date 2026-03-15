@@ -41,21 +41,27 @@ export default function BrowseScreen({ navigation }: Props) {
       onEndReached={loadMore}
       onEndReachedThreshold={0.5}
       ListFooterComponent={loadingMore ? <ActivityIndicator className="py-4" /> : null}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          className="flex-1 bg-gray-50 rounded-xl p-4 items-center"
-          onPress={() => navigation.navigate("Brand", { brandId: item.id, brandName: item.name })}
-        >
-          {item.logo_url ? (
-            <Image source={{ uri: item.logo_url }} className="w-16 h-16 mb-2" resizeMode="contain" />
-          ) : (
-            <View className="w-16 h-16 mb-2 bg-gray-200 rounded-lg items-center justify-center">
-              <Text className="text-gray-400 text-xs">No logo</Text>
+      renderItem={({ item }) => {
+        const logoUri = item.logo_url
+          ?? (item.website_url
+            ? (() => { try { return `https://img.logo.dev/${new URL(item.website_url!).hostname}?token=${process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN}`; } catch { return null; } })()
+            : null);
+        return (
+          <TouchableOpacity
+            className="flex-1 bg-gray-50 rounded-xl p-4 items-center"
+            onPress={() => navigation.navigate("Brand", { brandId: item.id, brandName: item.name })}
+          >
+            <View className="w-16 h-16 mb-2 rounded-xl bg-gray-200 items-center justify-center overflow-hidden">
+              {logoUri ? (
+                <Image source={{ uri: logoUri }} style={{ width: 64, height: 64 }} resizeMode="contain" />
+              ) : (
+                <Text className="text-xl font-bold text-gray-400">{item.name.charAt(0)}</Text>
+              )}
             </View>
-          )}
-          <Text className="font-semibold text-sm text-center" numberOfLines={2}>{item.name}</Text>
-        </TouchableOpacity>
-      )}
+            <Text className="font-semibold text-sm text-center" numberOfLines={2}>{item.name}</Text>
+          </TouchableOpacity>
+        );
+      }}
     />
   );
 }

@@ -73,30 +73,43 @@ export default function BrandScreen({ navigation, route }: Props) {
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ paddingBottom: 32 }}
       ListHeaderComponent={
-        <View className="px-4 pt-4 pb-4 border-b border-gray-100">
-          {/* Logo */}
-          {logoUri ? (
-            <Image
-              source={{ uri: logoUri }}
-              className="w-16 h-16 rounded-xl mb-3"
-              resizeMode="contain"
-            />
-          ) : (
-            <View className="w-16 h-16 rounded-xl bg-gray-100 items-center justify-center mb-3">
-              <Text className="text-gray-400 text-xs">No logo</Text>
+        <View className="px-4 pt-5 pb-5 border-b border-gray-100">
+          {/* Top row: logo + brand info side by side */}
+          <View className="flex-row items-center gap-4 mb-4">
+            {/* Logo — 64×64 */}
+            <View className="w-16 h-16 rounded-xl bg-gray-100 items-center justify-center overflow-hidden">
+              {logoUri ? (
+                <Image
+                  source={{ uri: logoUri }}
+                  style={{ width: 64, height: 64 }}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text className="text-gray-400 text-xs font-medium">
+                  {brand?.name?.charAt(0) ?? "?"}
+                </Text>
+              )}
             </View>
-          )}
 
-          {/* Item count */}
-          <Text className="text-sm text-gray-400 mb-2">
-            {items.length} {items.length === 1 ? "item" : "items"}
-          </Text>
+            {/* Brand name, item count, website */}
+            <View className="flex-1">
+              <Text className="text-xl font-bold mb-0.5">{brand?.name ?? route.params.brandName}</Text>
+              <Text className="text-sm text-gray-400 mb-1">
+                {items.length} {items.length === 1 ? "item" : "items"}
+              </Text>
+              {brand?.website_url ? (
+                <TouchableOpacity onPress={() => Linking.openURL(brand.website_url!)}>
+                  <Text className="text-sm text-blue-600">↗ Visit website</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
 
-          {/* Website link */}
-          {brand?.website_url ? (
-            <TouchableOpacity onPress={() => Linking.openURL(brand.website_url!)}>
-              <Text className="text-sm text-blue-600">↗ Visit website</Text>
-            </TouchableOpacity>
+          {/* Brand description */}
+          {brand?.description ? (
+            <View className="bg-gray-50 rounded-xl px-4 py-3">
+              <Text className="text-sm text-gray-600 leading-5">{brand.description}</Text>
+            </View>
           ) : null}
         </View>
       }

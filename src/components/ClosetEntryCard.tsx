@@ -9,8 +9,8 @@ type Props = {
 
 export default function ClosetEntryCard({ entry, onPress }: Props) {
   const CATEGORY_LABELS: Record<string, string> = {
-    top: "tops",
-    bottom: "bottoms",
+    top: "top",
+    bottom: "bottom",
     footwear: "footwear",
   };
   const score = entry.scores ?? null;
