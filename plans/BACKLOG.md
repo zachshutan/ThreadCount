@@ -2,6 +2,25 @@
 
 Features deferred from the Phase A–D rebuild. Use this alongside a Notion page for tracking status.
 
+## Deferred from Polish Pass (Phase 6)
+
+| Feature | Notes | Schema needed |
+|---------|-------|---------------|
+| Likes on posts | Like any feed event (closet_add, comparison, review). Requires `post_likes (user_id, event_type, event_id, created_at)` table + RLS + likeService + useLikes hook + heart icon + count in EventCard | `post_likes` table |
+| Comments on posts | Comment thread per feed event. Requires `post_comments (id, user_id, event_type, event_id, body, created_at)` table + RLS + commentService + useComments hook + comment list + input in PostDetailScreen | `post_comments` table |
+| Color on PostDetailScreen | Feed RPC does not currently return item color. Requires updating `get_feed` RPC to join `closet_entries.color` and surfacing it in PostDetailScreen | Feed RPC migration |
+| Post images | Allow users to attach photos to feed posts/reviews. User explicitly requested "future version" | `review_images` or `post_images` table |
+| Change password | Password reset via Supabase auth flow (`supabase.auth.updateUser({password})` or email-based reset). Add to Settings ACCOUNT section | None |
+| Push notifications | Expo push token registration + server-side notification sending. Requires Expo notification library + token storage in profiles + notification triggers | `profiles.push_token TEXT` |
+| Email preferences | Control which email types Supabase sends (weekly digest, follow alerts, etc.). Requires Supabase email template config + user preference storage | `profiles.email_prefs JSONB` |
+| Closet visibility | Who can see my closet (Everyone / Followers only / Private). Requires RLS policy update on closet_entries + privacy setting in profiles | `profiles.closet_visibility TEXT` |
+| Follow permissions | Who can follow me (Anyone / Approval required). Requires follow-request workflow + `follow_requests` table | `follow_requests` table |
+| Delete account | Permanently delete user account and all data. Requires Supabase admin API call (service role) or Edge Function that cascades deletes and calls `auth.admin.deleteUser()` | None (schema has cascade deletes) |
+
+---
+
+## Earlier Backlog
+
 | Feature | Notes | Schema needed |
 |---------|-------|---------------|
 | Tag-based filters (activewear, loungewear, formalwear) | Tags are orthogonal to subtype — a hoodie can be both "top" and "activewear" | New `item_tags` table: `(item_id, tag)` or `items.tags TEXT[]` |

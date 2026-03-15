@@ -9,6 +9,9 @@ export function useItemReviews(itemId: string) {
     if (!itemId) return;
     setLoading(true);
     getReviewsForItem(itemId).then((result) => {
+      if (result.error) {
+        console.error("[useItemReviews] failed to load reviews:", result.error.message);
+      }
       if (result.data) setReviews(result.data);
       setLoading(false);
     });

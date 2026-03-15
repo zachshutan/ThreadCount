@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   View, Text, TouchableOpacity, Alert, TextInput, ScrollView, Linking,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../hooks/useAuth";
 import { signOut } from "../../services/authService";
@@ -41,6 +42,7 @@ function SectionHeader({ title }: { title: string }) {
 
 export default function SettingsScreen() {
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [editingUsername, setEditingUsername] = useState(false);
   const [username, setUsername] = useState("");
 
@@ -52,7 +54,7 @@ export default function SettingsScreen() {
     } else {
       setEditingUsername(false);
       setUsername("");
-      Alert.alert("Saved", "Username updated.");
+      navigation.goBack();
     }
   }
 

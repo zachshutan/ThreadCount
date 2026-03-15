@@ -23,6 +23,17 @@ export async function searchProfiles(
   return data;
 }
 
+export async function searchBySubtype(subtypeName: string): Promise<Item[]> {
+  const { data } = await supabase
+    .from("items")
+    .select("id, model_name, category, brand_id, subtype_id, is_active, brands(name, slug), subtypes!inner(name)")
+    .eq("subtypes.name", subtypeName)
+    .eq("is_active", true)
+    .order("model_name")
+    .limit(40);
+  return (data ?? []) as Item[];
+}
+
 export async function search(query: string): Promise<SearchResults> {
   if (!query.trim()) return { brands: [], items: [], profiles: [] };
 

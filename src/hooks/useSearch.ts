@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { search, type SearchResults } from "../services/searchService";
+import { search, searchBySubtype, type SearchResults } from "../services/searchService";
 
 export function useSearch() {
   const [query, setQuery] = useState("");
@@ -18,5 +18,13 @@ export function useSearch() {
     setLoading(false);
   }, []);
 
-  return { query, results, loading, runSearch };
+  const runSubtypeSearch = useCallback(async (subtypeName: string, label: string) => {
+    setQuery(label);
+    setLoading(true);
+    const items = await searchBySubtype(subtypeName);
+    setResults({ brands: [], items, profiles: [] });
+    setLoading(false);
+  }, []);
+
+  return { query, results, loading, runSearch, runSubtypeSearch };
 }

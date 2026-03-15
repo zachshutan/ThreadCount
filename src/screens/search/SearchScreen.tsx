@@ -8,17 +8,17 @@ import { useSearch } from "../../hooks/useSearch";
 import { useBrands } from "../../hooks/useBrands";
 
 const DISCOVER_CATEGORIES = [
-  { label: "T-Shirts", icon: "shirt-outline" as const },
-  { label: "Hoodies", icon: "cloud-outline" as const },
-  { label: "Pants", icon: "reorder-three-outline" as const },
-  { label: "Sneakers", icon: "footsteps-outline" as const },
-  { label: "Jackets", icon: "umbrella-outline" as const },
-  { label: "Shorts", icon: "sunny-outline" as const },
+  { label: "T-Shirts", subtypeName: "T-Shirt", icon: "shirt-outline" as const },
+  { label: "Hoodies", subtypeName: "Hoodie", icon: "cloud-outline" as const },
+  { label: "Pants", subtypeName: "Pants", icon: "reorder-three-outline" as const },
+  { label: "Sneakers", subtypeName: "Sneaker", icon: "footsteps-outline" as const },
+  { label: "Jackets", subtypeName: "Jacket", icon: "umbrella-outline" as const },
+  { label: "Shorts", subtypeName: "Shorts", icon: "sunny-outline" as const },
 ];
 
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
-  const { query, results, loading, runSearch } = useSearch();
+  const { query, results, loading, runSearch, runSubtypeSearch } = useSearch();
   const { brands } = useBrands();
 
   const sections = [
@@ -128,7 +128,7 @@ export default function SearchScreen() {
                 <TouchableOpacity
                   key={cat.label}
                   className="flex-row items-center gap-2 px-4 py-2 border border-gray-200 rounded-full"
-                  onPress={() => runSearch(cat.label)}
+                  onPress={() => runSubtypeSearch(cat.subtypeName, cat.label)}
                 >
                   <Ionicons name={cat.icon} size={14} color="#6b7280" />
                   <Text className="text-sm text-gray-600">{cat.label}</Text>

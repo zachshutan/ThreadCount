@@ -52,7 +52,7 @@ export async function getReviewsForItem(
 ): Promise<QueryResult<Review[]>> {
   const { data, error } = await supabase
     .from("reviews")
-    .select("*, profiles(username)")
+    .select("*, profiles!user_id(username)")
     .eq("item_id", itemId)
     .order("created_at", { ascending: false });
 

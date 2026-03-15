@@ -95,7 +95,6 @@ export async function updateUsername(
 ): Promise<{ error: string | null }> {
   const { error } = await supabase
     .from("profiles")
-    .update({ username: newUsername })
-    .eq("id", userId);
+    .upsert({ id: userId, username: newUsername }, { onConflict: "id" });
   return { error: error?.message ?? null };
 }

@@ -102,7 +102,15 @@ export default function ProfileScreen({ navigation }: Props) {
             })
             .map((entry) => (
               <View key={entry.id} className="mb-2">
-                <ClosetEntryCard entry={entry} onPress={null} />
+                <ClosetEntryCard
+                  entry={entry}
+                  onPress={() =>
+                    navigation.getParent<any>()?.navigate("Browse", {
+                      screen: "Item",
+                      params: { itemId: entry.item_id },
+                    })
+                  }
+                />
               </View>
             ))
         )}
