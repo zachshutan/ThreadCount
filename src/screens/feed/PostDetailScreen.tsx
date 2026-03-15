@@ -48,6 +48,14 @@ export default function PostDetailScreen() {
 
   return (
     <View className="flex-1 bg-white">
+      <View className="flex-row justify-end px-4 pt-4">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="close" size={22} color="#9ca3af" />
+        </TouchableOpacity>
+      </View>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         {/* Header: username + date */}
         <View className="px-6 pt-6 pb-4">
