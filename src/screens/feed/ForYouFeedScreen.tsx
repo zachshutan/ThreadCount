@@ -7,12 +7,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFeed } from "../../hooks/useFeed";
 import type { FeedEvent } from "../../services/feedService";
 
-function EventCard({ event, onUserPress }: { event: FeedEvent; onUserPress: () => void }) {
-  const descriptions: Record<FeedEvent["event_type"], string> = {
-    closet_add: `added ${event.item_name} to their closet`,
-    comparison: `rated ${event.item_name} — ${event.overall_score?.toFixed(1) ?? "?"}/10`,
-    review: `reviewed ${event.item_name}`,
+function EventCard({
+  event,
+  onUserPress,
+  onItemPress,
+}: {
+  event: FeedEvent;
+  onUserPress: () => void;
+  onItemPress?: () => void;
+}) {
+  const descriptionParts: Record<FeedEvent["event_type"], { prefix: string; suffix: string }> = {
+    closet_add: { prefix: "added ", suffix: " to their closet" },
+    comparison: {
+      prefix: "rated ",
+      suffix: ` — ${event.overall_score?.toFixed(1) ?? "?"}/10`,
+    },
+    review: { prefix: "reviewed ", suffix: "" },
   };
+
+  const { prefix, suffix } = descriptionParts[event.event_type];
 
   return (
     <View className="p-4 border-b border-gray-100">
@@ -20,7 +33,16 @@ function EventCard({ event, onUserPress }: { event: FeedEvent; onUserPress: () =
         <TouchableOpacity onPress={onUserPress}>
           <Text className="font-semibold text-sm">{event.username}</Text>
         </TouchableOpacity>
-        <Text className="text-gray-500 text-sm ml-1">{descriptions[event.event_type]}</Text>
+        <Text className="text-gray-500 text-sm ml-1">
+          {prefix}
+          <Text
+            className={`font-semibold${onItemPress ? " underline" : ""}`}
+            onPress={onItemPress}
+          >
+            {event.item_name}
+          </Text>
+          {suffix}
+        </Text>
       </View>
       {event.brand_name && (
         <Text className="text-xs text-gray-400">
@@ -82,6 +104,15 @@ export default function ForYouFeedScreen() {
           <EventCard
             event={event}
             onUserPress={() => navigation.navigate("PublicCloset", { userId: event.user_id })}
+            onItemPress={
+              event.item_id
+                ? () =>
+                    navigation.navigate("Browse", {
+                      screen: "Item",
+                      params: { itemId: event.item_id },
+                    })
+                : undefined
+            }
           />
         )}
         refreshControl={
