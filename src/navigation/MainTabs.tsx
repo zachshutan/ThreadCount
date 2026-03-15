@@ -13,6 +13,7 @@ import SearchScreen from "../screens/search/SearchScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import SettingsScreen from "../screens/profile/SettingsScreen";
 import FollowListModal from "../screens/profile/FollowListModal";
+import PlaceholderScreen from "../screens/profile/PlaceholderScreen";
 
 export type BrowseStackParamList = {
   BrowseList: undefined;
@@ -30,6 +31,7 @@ export type ProfileStackParamList = {
   ProfileHome: undefined;
   Settings: undefined;
   FollowList: { type: "followers" | "following"; userId: string };
+  Placeholder: { title: string };
 };
 
 export type MainTabsParamList = {
@@ -86,6 +88,11 @@ function ProfileNavigator() {
         options={({ route }) => ({
           title: route.params.type === "followers" ? "Followers" : "Following",
         })}
+      />
+      <ProfileStack.Screen
+        name="Placeholder"
+        component={PlaceholderScreen}
+        options={({ route }) => ({ title: route.params.title })}
       />
     </ProfileStack.Navigator>
   );
