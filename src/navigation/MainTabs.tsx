@@ -10,6 +10,8 @@ import ClosetScreen from "../screens/closet/ClosetScreen";
 import ItemDetailScreen from "../screens/closet/ItemDetailScreen";
 import WriteReviewScreen from "../screens/closet/WriteReviewScreen";
 import SearchScreen from "../screens/search/SearchScreen";
+import ProfileScreen from "../screens/profile/ProfileScreen";
+import SettingsScreen from "../screens/profile/SettingsScreen";
 
 export type BrowseStackParamList = {
   BrowseList: undefined;
@@ -23,11 +25,17 @@ export type ClosetStackParamList = {
   WriteReview: { itemId: string };
 };
 
+export type ProfileStackParamList = {
+  ProfileHome: undefined;
+  Settings: undefined;
+};
+
 export type MainTabsParamList = {
   Home: undefined;
   Browse: undefined;
   Closet: undefined;
   Search: undefined;
+  Profile: undefined;
 };
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -37,11 +45,13 @@ const TAB_ICONS: Record<keyof MainTabsParamList, { active: IoniconName; inactive
   Browse: { active: "compass", inactive: "compass-outline" },
   Closet: { active: "shirt", inactive: "shirt-outline" },
   Search: { active: "search", inactive: "search-outline" },
+  Profile: { active: "person", inactive: "person-outline" },
 };
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>();
 const ClosetStack = createNativeStackNavigator<ClosetStackParamList>();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
 function BrowseNavigator() {
   return (
@@ -63,6 +73,15 @@ function ClosetNavigator() {
   );
 }
 
+function ProfileNavigator() {
+  return (
+    <ProfileStack.Navigator>
+      <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
+    </ProfileStack.Navigator>
+  );
+}
+
 export default function MainTabs() {
   return (
     <Tab.Navigator
@@ -81,6 +100,7 @@ export default function MainTabs() {
       <Tab.Screen name="Browse" component={BrowseNavigator} />
       <Tab.Screen name="Closet" component={ClosetNavigator} />
       <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );
 }

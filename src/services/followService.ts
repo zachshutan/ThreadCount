@@ -54,3 +54,19 @@ export async function getProfile(userId: string) {
     .single();
   return { data, error };
 }
+
+export async function getFollowerCount(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("following_id", userId);
+  return count ?? 0;
+}
+
+export async function getFollowingCount(userId: string): Promise<number> {
+  const { count } = await supabase
+    .from("follows")
+    .select("*", { count: "exact", head: true })
+    .eq("follower_id", userId);
+  return count ?? 0;
+}
