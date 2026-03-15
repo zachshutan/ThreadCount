@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getCloset, type ClosetEntry } from "../services/closetService";
 import { useAuth } from "./useAuth";
+import { groupOwnedBySubtype, getOwnedSubtypeNames, type SubtypeSection } from "../lib/closetUtils";
 
 export function useCloset() {
   const { user } = useAuth();
@@ -22,5 +23,15 @@ export function useCloset() {
   const owned = useMemo(() => entries.filter((e) => e.entry_type === "owned"), [entries]);
   const interested = useMemo(() => entries.filter((e) => e.entry_type === "interested"), [entries]);
 
-  return { entries, owned, interested, loading, error, refresh };
+  const ownedBySubtype = useMemo<SubtypeSection[]>(
+    () => groupOwnedBySubtype(entries),
+    [entries]
+  );
+
+  const subtypeNames = useMemo<string[]>(
+    () => getOwnedSubtypeNames(entries),
+    [entries]
+  );
+
+  return { entries, owned, interested, ownedBySubtype, subtypeNames, loading, error, refresh };
 }

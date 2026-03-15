@@ -14,6 +14,10 @@ export type ClosetEntry = {
     brands: { name: string } | null;
     subtypes: { name: string } | null;
   } | null;
+  scores?: Array<{
+    category_rank: number | null;
+    overall_score: number | null;
+  }> | null;
 };
 
 type QueryResult<T> = { data: T | null; error: { message: string } | null };
@@ -21,7 +25,7 @@ type QueryResult<T> = { data: T | null; error: { message: string } | null };
 export async function getCloset(userId: string): Promise<QueryResult<ClosetEntry[]>> {
   const { data, error } = await supabase
     .from("closet_entries")
-    .select("*, items(id, model_name, category, brands(name), subtypes(name))")
+    .select("*, items(id, model_name, category, brands(name), subtypes(name)), scores(category_rank, overall_score)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 

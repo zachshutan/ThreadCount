@@ -1,0 +1,52 @@
+import type { ClosetEntry } from "../services/closetService";
+
+export type SubtypeSection = {
+  subtypeName: string;
+  data: ClosetEntry[];
+};
+
+/**
+ * Groups owned closet entries by subtype name (alphabetically), with entries
+ * within each group sorted by category_rank ascending (ranked items first,
+ * unranked items at the bottom of each section).
+ */
+export function groupOwnedBySubtype(entries: ClosetEntry[]): SubtypeSection[] {
+  const owned = entries.filter((e) => e.entry_type === "owned");
+
+  const grouped = new Map<string, ClosetEntry[]>();
+  for (const entry of owned) {
+    const name = entry.items?.subtypes?.name ?? "Other";
+    if (!grouped.has(name)) grouped.set(name, []);
+    grouped.get(name)!.push(entry);
+  }
+
+  const sections: SubtypeSection[] = [];
+  for (const [subtypeName, groupEntries] of grouped) {
+    const sorted = [...groupEntries].sort((a, b) => {
+      const rankA = a.scores?.[0]?.category_rank ?? null;
+      const rankB = b.scores?.[0]?.category_rank ?? null;
+      if (rankA === null && rankB === null) return 0;
+      if (rankA === null) return 1;
+      if (rankB === null) return -1;
+      return rankA - rankB;
+    });
+    sections.push({ subtypeName, data: sorted });
+  }
+
+  sections.sort((a, b) => a.subtypeName.localeCompare(b.subtypeName));
+  return sections;
+}
+
+/**
+ * Returns all unique subtype names from owned entries (alphabetically sorted).
+ * Used to render the subcategory filter pills.
+ */
+export function getOwnedSubtypeNames(entries: ClosetEntry[]): string[] {
+  const names = new Set<string>();
+  for (const entry of entries) {
+    if (entry.entry_type === "owned") {
+      names.add(entry.items?.subtypes?.name ?? "Other");
+    }
+  }
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
