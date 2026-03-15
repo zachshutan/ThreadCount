@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, ActivityIndicator,
+  Image, Linking,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { BrowseStackParamList } from "../../navigation/MainTabs";
 import { useItems } from "../../hooks/useItems";
+import { getBrandById, type Brand } from "../../services/brandService";
 
 type Props = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Brand">;
@@ -15,6 +17,27 @@ type Props = {
 export default function BrandScreen({ navigation, route }: Props) {
   const { brandId } = route.params;
   const { items, loading, error } = useItems(brandId);
+  const [brand, setBrand] = useState<Brand | null>(null);
+
+  useEffect(() => {
+    getBrandById(brandId).then((result) => {
+      if (result.data) setBrand(result.data);
+    });
+  }, [brandId]);
+
+  // Determine logo source: prefer logo_url, fall back to Clearbit when website_url is available
+  function getLogoUri(): string | null {
+    if (brand?.logo_url) return brand.logo_url;
+    if (brand?.website_url) {
+      try {
+        const domain = new URL(brand.website_url).hostname;
+        return `https://logo.clearbit.com/${domain}`;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
 
   if (loading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
@@ -28,18 +51,48 @@ export default function BrandScreen({ navigation, route }: Props) {
     );
   }
 
+  const logoUri = getLogoUri();
+
   return (
     <FlatList
       className="bg-white"
       data={items}
       keyExtractor={(item) => item.id}
-      contentContainerClassName="p-4 gap-3"
+      contentContainerClassName="pb-8"
+      ListHeaderComponent={
+        <View className="px-4 pt-4 pb-4 border-b border-gray-100">
+          {/* Logo */}
+          {logoUri ? (
+            <Image
+              source={{ uri: logoUri }}
+              className="w-16 h-16 rounded-xl mb-3"
+              resizeMode="contain"
+            />
+          ) : (
+            <View className="w-16 h-16 rounded-xl bg-gray-100 items-center justify-center mb-3">
+              <Text className="text-gray-400 text-xs">No logo</Text>
+            </View>
+          )}
+
+          {/* Item count */}
+          <Text className="text-sm text-gray-400 mb-2">
+            {items.length} {items.length === 1 ? "item" : "items"}
+          </Text>
+
+          {/* Website link */}
+          {brand?.website_url ? (
+            <TouchableOpacity onPress={() => Linking.openURL(brand.website_url!)}>
+              <Text className="text-sm text-blue-600">↗ Visit website</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      }
       ListEmptyComponent={
         <Text className="text-center text-gray-400 py-8">No items yet.</Text>
       }
       renderItem={({ item }) => (
         <TouchableOpacity
-          className="bg-gray-50 rounded-xl px-4 py-3 flex-row items-center justify-between"
+          className="bg-gray-50 mx-4 mt-3 rounded-xl px-4 py-3 flex-row items-center justify-between"
           onPress={() => navigation.navigate("Item", { itemId: item.id })}
         >
           <View>

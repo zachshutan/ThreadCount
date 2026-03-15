@@ -12,6 +12,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../navigation/RootNavigator";
 import { useRankingSession } from "../../hooks/useRankingSession";
 import { calculateScoreFromRank } from "../../lib/scoring";
+import SubcategoryPlaceholder from "../../components/SubcategoryPlaceholder";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RankingComparison">;
 
@@ -142,8 +143,8 @@ export default function RankingComparisonScreen({ route }: Props) {
           onPress={handleNewItemWins}
           activeOpacity={0.85}
         >
-          <View className="w-full aspect-square bg-gray-200 rounded-xl mb-3 items-center justify-center">
-            <Text className="text-gray-400 text-xs">No image</Text>
+          <View className="w-full items-center mb-3">
+            <SubcategoryPlaceholder subtypeName={subtypeName} size={120} />
           </View>
           <Text className="text-sm font-semibold text-center" numberOfLines={2}>
             {itemName}
@@ -159,8 +160,8 @@ export default function RankingComparisonScreen({ route }: Props) {
           onPress={handlePeerWins}
           activeOpacity={0.85}
         >
-          <View className="w-full aspect-square bg-gray-200 rounded-xl mb-3 items-center justify-center">
-            <Text className="text-gray-400 text-xs">No image</Text>
+          <View className="w-full items-center mb-3">
+            <SubcategoryPlaceholder subtypeName={subtypeName} size={120} />
           </View>
           <Text className="text-sm font-semibold text-center" numberOfLines={2}>
             {currentComparator?.modelName ?? ""}

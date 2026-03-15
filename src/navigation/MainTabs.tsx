@@ -1,6 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import ForYouFeedScreen from "../screens/feed/ForYouFeedScreen";
 import BrowseScreen from "../screens/browse/BrowseScreen";
 import BrandScreen from "../screens/browse/BrandScreen";
@@ -29,6 +30,15 @@ export type MainTabsParamList = {
   Search: undefined;
 };
 
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+const TAB_ICONS: Record<keyof MainTabsParamList, { active: IoniconName; inactive: IoniconName }> = {
+  Home: { active: "home", inactive: "home-outline" },
+  Browse: { active: "compass", inactive: "compass-outline" },
+  Closet: { active: "shirt", inactive: "shirt-outline" },
+  Search: { active: "search", inactive: "search-outline" },
+};
+
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>();
 const ClosetStack = createNativeStackNavigator<ClosetStackParamList>();
@@ -55,7 +65,18 @@ function ClosetNavigator() {
 
 export default function MainTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          const icons = TAB_ICONS[route.name as keyof MainTabsParamList];
+          const name = focused ? icons.active : icons.inactive;
+          return <Ionicons name={name} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#000",
+        tabBarInactiveTintColor: "#9ca3af",
+        tabBarShowLabel: true,
+      })}
+    >
       <Tab.Screen name="Home" component={ForYouFeedScreen} />
       <Tab.Screen name="Browse" component={BrowseNavigator} />
       <Tab.Screen name="Closet" component={ClosetNavigator} />

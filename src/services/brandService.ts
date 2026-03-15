@@ -5,6 +5,7 @@ export type Brand = {
   name: string;
   logo_url: string | null;
   slug: string;
+  website_url?: string | null;
 };
 
 type PaginationOptions = { page: number; pageSize: number };
@@ -23,4 +24,16 @@ export async function getBrands(
     .range(from, to);
 
   return { data, error, count: count ?? 0 };
+}
+
+type SingleResult<T> = { data: T | null; error: { message: string } | null };
+
+export async function getBrandById(brandId: string): Promise<SingleResult<Brand>> {
+  const { data, error } = await supabase
+    .from("brands")
+    .select("id, name, logo_url, slug, website_url")
+    .eq("id", brandId)
+    .single();
+
+  return { data, error };
 }
