@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default function ClosetEntryCard({ entry, onPress }: Props) {
-  const score = entry.scores?.[0] ?? null;
+  const score = entry.scores ?? null;
   const rank = score?.category_rank ?? null;
   const overallScore = score?.overall_score ?? null;
   const subtypeName = entry.items?.subtypes?.name ?? null;

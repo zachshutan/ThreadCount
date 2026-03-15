@@ -15,9 +15,9 @@ function makeEntry(overrides: Partial<ClosetEntry> & { id: string }): ClosetEntr
 describe("groupOwnedBySubtype", () => {
   it("groups entries by their subtype name", () => {
     const entries: ClosetEntry[] = [
-      makeEntry({ id: "e1", items: { id: "i1", model_name: "Air Force 1", category: "footwear", brands: { name: "Nike" }, subtypes: { name: "Sneaker" } }, scores: [{ category_rank: 1, overall_score: 10 }] }),
-      makeEntry({ id: "e2", items: { id: "i2", model_name: "Old Skool", category: "footwear", brands: { name: "Vans" }, subtypes: { name: "Sneaker" } }, scores: [{ category_rank: 2, overall_score: 5.5 }] }),
-      makeEntry({ id: "e3", items: { id: "i3", model_name: "Chelsea Boot", category: "footwear", brands: { name: "Dr. Martens" }, subtypes: { name: "Boot" } }, scores: [{ category_rank: 3, overall_score: 1 }] }),
+      makeEntry({ id: "e1", items: { id: "i1", model_name: "Air Force 1", category: "footwear", brands: { name: "Nike" }, subtypes: { name: "Sneaker" } }, scores: { category_rank: 1, overall_score: 10 } }),
+      makeEntry({ id: "e2", items: { id: "i2", model_name: "Old Skool", category: "footwear", brands: { name: "Vans" }, subtypes: { name: "Sneaker" } }, scores: { category_rank: 2, overall_score: 5.5 } }),
+      makeEntry({ id: "e3", items: { id: "i3", model_name: "Chelsea Boot", category: "footwear", brands: { name: "Dr. Martens" }, subtypes: { name: "Boot" } }, scores: { category_rank: 3, overall_score: 1 } }),
     ];
 
     const result = groupOwnedBySubtype(entries);
@@ -32,9 +32,9 @@ describe("groupOwnedBySubtype", () => {
 
   it("sorts entries within each group by category_rank ascending (ranked first, unranked last)", () => {
     const entries: ClosetEntry[] = [
-      makeEntry({ id: "e1", items: { id: "i1", model_name: "Item A", category: "top", brands: null, subtypes: { name: "T-Shirt" } }, scores: [{ category_rank: 2, overall_score: 7 }] }),
+      makeEntry({ id: "e1", items: { id: "i1", model_name: "Item A", category: "top", brands: null, subtypes: { name: "T-Shirt" } }, scores: { category_rank: 2, overall_score: 7 } }),
       makeEntry({ id: "e2", items: { id: "i2", model_name: "Item B", category: "top", brands: null, subtypes: { name: "T-Shirt" } }, scores: null }),
-      makeEntry({ id: "e3", items: { id: "i3", model_name: "Item C", category: "top", brands: null, subtypes: { name: "T-Shirt" } }, scores: [{ category_rank: 1, overall_score: 10 }] }),
+      makeEntry({ id: "e3", items: { id: "i3", model_name: "Item C", category: "top", brands: null, subtypes: { name: "T-Shirt" } }, scores: { category_rank: 1, overall_score: 10 } }),
     ];
 
     const result = groupOwnedBySubtype(entries);

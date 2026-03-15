@@ -14,10 +14,10 @@ export type ClosetEntry = {
     brands: { name: string } | null;
     subtypes: { name: string } | null;
   } | null;
-  scores?: Array<{
+  scores?: {
     category_rank: number | null;
     overall_score: number | null;
-  }> | null;
+  } | null;
 };
 
 type QueryResult<T> = { data: T | null; error: { message: string } | null };

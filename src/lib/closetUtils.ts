@@ -23,8 +23,8 @@ export function groupOwnedBySubtype(entries: ClosetEntry[]): SubtypeSection[] {
   const sections: SubtypeSection[] = [];
   for (const [subtypeName, groupEntries] of grouped) {
     const sorted = [...groupEntries].sort((a, b) => {
-      const rankA = a.scores?.[0]?.category_rank ?? null;
-      const rankB = b.scores?.[0]?.category_rank ?? null;
+      const rankA = a.scores?.category_rank ?? null;
+      const rankB = b.scores?.category_rank ?? null;
       if (rankA === null && rankB === null) return 0;
       if (rankA === null) return 1;
       if (rankB === null) return -1;
