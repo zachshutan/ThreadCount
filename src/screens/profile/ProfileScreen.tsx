@@ -67,17 +67,26 @@ export default function ProfileScreen({ navigation }: Props) {
         </View>
       </View>
 
-      {/* Owned items list */}
+      {/* Owned items list — sorted by ranking score, unranked at bottom */}
       <View className="px-4 pt-2 pb-8">
-        <Text className="font-bold text-base mb-3">My Closet</Text>
+        <Text className="font-bold text-base mb-3">Recently Ranked</Text>
         {owned.length === 0 ? (
           <Text className="text-gray-400 text-sm">No owned items yet.</Text>
         ) : (
-          owned.map((entry) => (
-            <View key={entry.id} className="mb-2">
-              <ClosetEntryCard entry={entry} onPress={null} />
-            </View>
-          ))
+          [...owned]
+            .sort((a, b) => {
+              const sa = a.scores?.overall_score ?? null;
+              const sb = b.scores?.overall_score ?? null;
+              if (sa === null && sb === null) return 0;
+              if (sa === null) return 1;
+              if (sb === null) return -1;
+              return sb - sa;
+            })
+            .map((entry) => (
+              <View key={entry.id} className="mb-2">
+                <ClosetEntryCard entry={entry} onPress={null} />
+              </View>
+            ))
         )}
       </View>
     </ScrollView>
