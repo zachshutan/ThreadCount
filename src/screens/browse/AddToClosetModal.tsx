@@ -75,6 +75,7 @@ export default function AddToClosetModal({
             category: itemResult.data.category,
             itemName: itemResult.data.model_name,
             subtypeName: itemResult.data.subtypes?.name ?? itemResult.data.category,
+            subtypeId: itemResult.data.subtype_id ?? "",
           });
           return;
         }

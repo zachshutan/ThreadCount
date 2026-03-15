@@ -17,6 +17,7 @@ export type RootStackParamList = {
     category: "top" | "bottom" | "footwear";
     itemName: string;
     subtypeName: string;
+    subtypeId: string;
   };
 };
 

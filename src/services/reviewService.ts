@@ -28,7 +28,23 @@ export async function submitReview(params: {
     },
   });
 
-  return { data: data ?? null, error: error ?? null };
+  if (error) {
+    if (error.context) {
+      try {
+        const body = await error.context.json();
+        return { data: null, error: { message: body.error ?? "unknown_error" } };
+      } catch {
+        return { data: null, error: { message: error.message } };
+      }
+    }
+    return { data: null, error: { message: error.message } };
+  }
+
+  if (!data) {
+    return { data: null, error: { message: "unknown_error" } };
+  }
+
+  return { data: data, error: null };
 }
 
 export async function getReviewsForItem(

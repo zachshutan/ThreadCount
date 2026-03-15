@@ -19,6 +19,7 @@ export type RankingSessionState = {
   comparisonCount: number;
   finalRank: number | null;
   totalItems: number;
+  subtypeTotalItems: number;
   handleNewItemWins: () => Promise<void>;
   handlePeerWins: () => Promise<void>;
 };
@@ -27,6 +28,7 @@ export function useRankingSession(params: {
   newEntryId: string;
   userId: string;
   category: "top" | "bottom" | "footwear";
+  subtypeId: string;
 }): RankingSessionState {
   const [isLoading, setIsLoading] = useState(true);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -105,6 +107,8 @@ export function useRankingSession(params: {
   const currentComparator =
     currentComparatorIndex !== null ? peers[currentComparatorIndex] : null;
 
+  const subtypeTotalItems = peers.filter((p) => p.subtypeId === params.subtypeId).length + 1;
+
   return {
     isLoading,
     isFinalizing,
@@ -114,6 +118,7 @@ export function useRankingSession(params: {
     comparisonCount,
     finalRank,
     totalItems: peers.length + 1,
+    subtypeTotalItems,
     handleNewItemWins: () => handleChoice(true),
     handlePeerWins: () => handleChoice(false),
   };

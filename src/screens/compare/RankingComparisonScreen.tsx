@@ -17,7 +17,7 @@ import SubcategoryPlaceholder from "../../components/SubcategoryPlaceholder";
 type Props = NativeStackScreenProps<RootStackParamList, "RankingComparison">;
 
 export default function RankingComparisonScreen({ route }: Props) {
-  const { newEntryId, userId, category, itemName, subtypeName } = route.params;
+  const { newEntryId, userId, category, itemName, subtypeName, subtypeId } = route.params;
   const navigation = useNavigation();
 
   const {
@@ -29,9 +29,10 @@ export default function RankingComparisonScreen({ route }: Props) {
     comparisonCount,
     finalRank,
     totalItems,
+    subtypeTotalItems,
     handleNewItemWins,
     handlePeerWins,
-  } = useRankingSession({ newEntryId, userId, category });
+  } = useRankingSession({ newEntryId, userId, category, subtypeId });
 
   // Intercept hardware back button (Android) and swipe-back gesture
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function RankingComparisonScreen({ route }: Props) {
         </View>
         <Text className="text-2xl font-bold text-center mb-2">{itemName}</Text>
         <Text className="text-gray-500 text-center mb-2">
-          Ranked #{finalRank} out of {totalItems} {subtypeName}s
+          Ranked #{finalRank} out of {subtypeTotalItems} {subtypeName}s
         </Text>
         <Text className="text-4xl font-bold mt-4">{score.toFixed(1)}</Text>
         <Text className="text-gray-400 text-sm mt-1">score</Text>

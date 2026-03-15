@@ -193,8 +193,8 @@ describe("fetchRankedPeers", () => {
     expect(orderMock).toHaveBeenCalledWith("category_rank", { ascending: true });
 
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ id: "entry-1", modelName: "Nike Air Max", imageUrl: null });
-    expect(result[1]).toEqual({ id: "entry-2", modelName: "Adidas Stan Smith", imageUrl: null });
+    expect(result[0]).toEqual({ id: "entry-1", modelName: "Nike Air Max", imageUrl: null, subtypeId: null });
+    expect(result[1]).toEqual({ id: "entry-2", modelName: "Adidas Stan Smith", imageUrl: null, subtypeId: null });
   });
 
   it("returns empty array when no ranked peers exist", async () => {

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View, Text, SectionList, FlatList, TouchableOpacity,
   ActivityIndicator, ScrollView,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { ClosetStackParamList } from "../../navigation/MainTabs";
 import { useCloset } from "../../hooks/useCloset";
 import ClosetEntryCard from "../../components/ClosetEntryCard";
@@ -16,9 +17,15 @@ type Props = {
 type Tab = "owned" | "interested";
 
 export default function ClosetScreen({ navigation }: Props) {
-  const { owned, interested, ownedBySubtype, subtypeNames, loading, error } = useCloset();
+  const { owned, interested, ownedBySubtype, subtypeNames, loading, error, refresh } = useCloset();
   const [activeTab, setActiveTab] = useState<Tab>("owned");
   const [activeSubtype, setActiveSubtype] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   if (loading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;

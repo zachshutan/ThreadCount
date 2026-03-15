@@ -87,7 +87,7 @@ export async function fetchRankedPeers(
 ): Promise<RankedPeer[]> {
   const { data, error } = await supabase
     .from("scores")
-    .select("closet_entry_id, category_rank, closet_entries(items(model_name))")
+    .select("closet_entry_id, category_rank, closet_entries(items(model_name, subtype_id))")
     .eq("user_id", userId)
     .eq("category", category)
     .not("category_rank", "is", null)
@@ -99,6 +99,7 @@ export async function fetchRankedPeers(
     id: row.closet_entry_id,
     modelName: row.closet_entries?.items?.model_name ?? "Unknown item",
     imageUrl: null,
+    subtypeId: row.closet_entries?.items?.subtype_id ?? null,
   }));
 }
 

@@ -20,6 +20,7 @@ export type RankedPeer = {
   id: string;
   modelName: string;
   imageUrl: string | null;
+  subtypeId: string | null;
 };
 
 export type RankingSession = {
