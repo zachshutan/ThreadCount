@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,7 +32,7 @@ export default function ProfileScreen({ navigation }: Props) {
     <ScrollView className="flex-1 bg-white">
       {/* Header with settings icon */}
       <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
-        <Text className="text-2xl font-bold">{profile?.username ?? "Profile"}</Text>
+        <Text className="text-2xl font-bold">{profile?.username ? `@${profile.username}` : "Profile"}</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Settings")}>
           <Ionicons name="menu-outline" size={24} color="#000" />
         </TouchableOpacity>
@@ -40,30 +40,48 @@ export default function ProfileScreen({ navigation }: Props) {
 
       {/* Avatar + stats row */}
       <View className="flex-row items-center px-4 py-4 gap-6">
-        {profile?.avatar_url ? (
-          <Image source={{ uri: profile.avatar_url }} className="w-20 h-20 rounded-full" />
-        ) : (
-          <View className="w-20 h-20 rounded-full bg-gray-200 items-center justify-center">
-            <Ionicons name="person-outline" size={32} color="#9ca3af" />
-          </View>
-        )}
+        <TouchableOpacity onPress={() => Alert.alert("Change photo", "Avatar upload coming soon.")}>
+          {profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} className="w-20 h-20 rounded-full" />
+          ) : (
+            <View className="w-20 h-20 rounded-full bg-gray-200 items-center justify-center">
+              <Ionicons name="person-outline" size={32} color="#9ca3af" />
+            </View>
+          )}
+        </TouchableOpacity>
         <View className="flex-row gap-6">
-          <View className="items-center">
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => navigation.getParent<any>()?.navigate("Closet", {
+              screen: "ClosetList", params: { initialTab: "owned" },
+            })}
+          >
             <Text className="text-xl font-bold">{owned.length}</Text>
             <Text className="text-xs text-gray-500">Owned</Text>
-          </View>
-          <View className="items-center">
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => navigation.getParent<any>()?.navigate("Closet", {
+              screen: "ClosetList", params: { initialTab: "interested" },
+            })}
+          >
             <Text className="text-xl font-bold">{interested.length}</Text>
             <Text className="text-xs text-gray-500">Wishlist</Text>
-          </View>
-          <View className="items-center">
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => user?.id && navigation.navigate("FollowList", { type: "followers", userId: user.id })}
+          >
             <Text className="text-xl font-bold">{followerCount}</Text>
             <Text className="text-xs text-gray-500">Followers</Text>
-          </View>
-          <View className="items-center">
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => user?.id && navigation.navigate("FollowList", { type: "following", userId: user.id })}
+          >
             <Text className="text-xl font-bold">{followingCount}</Text>
             <Text className="text-xs text-gray-500">Following</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 

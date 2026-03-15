@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { ClosetStackParamList } from "../../navigation/MainTabs";
 import { useCloset } from "../../hooks/useCloset";
 import ClosetEntryCard from "../../components/ClosetEntryCard";
@@ -13,13 +14,14 @@ import type { ClosetEntry } from "../../services/closetService";
 
 type Props = {
   navigation: NativeStackNavigationProp<ClosetStackParamList, "ClosetList">;
+  route: RouteProp<ClosetStackParamList, "ClosetList">;
 };
 
 type Tab = "owned" | "interested";
 
-export default function ClosetScreen({ navigation }: Props) {
+export default function ClosetScreen({ navigation, route }: Props) {
   const { entries, owned, interested, subtypeNames, loading, error, refresh } = useCloset();
-  const [activeTab, setActiveTab] = useState<Tab>("owned");
+  const [activeTab, setActiveTab] = useState<Tab>(route.params?.initialTab ?? "owned");
   const [activeSubtype, setActiveSubtype] = useState<string | null>(null);
 
   useFocusEffect(

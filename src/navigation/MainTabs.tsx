@@ -12,6 +12,7 @@ import WriteReviewScreen from "../screens/closet/WriteReviewScreen";
 import SearchScreen from "../screens/search/SearchScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import SettingsScreen from "../screens/profile/SettingsScreen";
+import FollowListModal from "../screens/profile/FollowListModal";
 
 export type BrowseStackParamList = {
   BrowseList: undefined;
@@ -20,7 +21,7 @@ export type BrowseStackParamList = {
 };
 
 export type ClosetStackParamList = {
-  ClosetList: undefined;
+  ClosetList: { initialTab?: "owned" | "interested" } | undefined;
   ItemDetail: { closetEntryId: string };
   WriteReview: { itemId: string };
 };
@@ -28,6 +29,7 @@ export type ClosetStackParamList = {
 export type ProfileStackParamList = {
   ProfileHome: undefined;
   Settings: undefined;
+  FollowList: { type: "followers" | "following"; userId: string };
 };
 
 export type MainTabsParamList = {
@@ -78,6 +80,13 @@ function ProfileNavigator() {
     <ProfileStack.Navigator>
       <ProfileStack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: "Settings" }} />
+      <ProfileStack.Screen
+        name="FollowList"
+        component={FollowListModal}
+        options={({ route }) => ({
+          title: route.params.type === "followers" ? "Followers" : "Following",
+        })}
+      />
     </ProfileStack.Navigator>
   );
 }

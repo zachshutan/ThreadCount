@@ -71,6 +71,24 @@ export async function getFollowingCount(userId: string): Promise<number> {
   return count ?? 0;
 }
 
+export type FollowUser = { id: string; username: string; avatar_url: string | null };
+
+export async function getFollowers(userId: string): Promise<FollowUser[]> {
+  const { data } = await supabase
+    .from("follows")
+    .select("profiles!follower_id(id, username, avatar_url)")
+    .eq("following_id", userId);
+  return (data ?? []).map((row: any) => row.profiles).filter(Boolean);
+}
+
+export async function getFollowing(userId: string): Promise<FollowUser[]> {
+  const { data } = await supabase
+    .from("follows")
+    .select("profiles!following_id(id, username, avatar_url)")
+    .eq("follower_id", userId);
+  return (data ?? []).map((row: any) => row.profiles).filter(Boolean);
+}
+
 export async function updateUsername(
   userId: string,
   newUsername: string
