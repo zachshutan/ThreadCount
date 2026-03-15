@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native";
 import { useCloset } from "../../hooks/useCloset";
-import { useScores } from "../../hooks/useScores";
-import {
-  getComparisonHistory,
-  type ComparisonHistoryEntry,
-} from "../../services/closetService";
 
 type ItemDetailRouteParams = { closetEntryId: string };
+
+function toOrdinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 
 export default function ItemDetailScreen() {
   const route = useRoute<RouteProp<{ ItemDetail: ItemDetailRouteParams }, "ItemDetail">>();
@@ -18,21 +19,10 @@ export default function ItemDetailScreen() {
   const { closetEntryId } = route.params;
 
   const { entries, loading: closetLoading } = useCloset();
-  const { score, loading: scoreLoading } = useScores(closetEntryId);
-
-  const [history, setHistory] = useState<ComparisonHistoryEntry[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-
-  useEffect(() => {
-    getComparisonHistory(closetEntryId).then((h) => {
-      setHistory(h);
-      setHistoryLoading(false);
-    });
-  }, [closetEntryId]);
 
   const entry = entries.find((e) => e.id === closetEntryId);
 
-  if (closetLoading || scoreLoading) {
+  if (closetLoading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
   }
 
@@ -44,73 +34,89 @@ export default function ItemDetailScreen() {
     );
   }
 
+  const score = entry.scores;
+
+  // Category ranking: how many owned items in the same category have a rank?
+  const categoryRankedItems = entries.filter(
+    (e) =>
+      e.entry_type === "owned" &&
+      e.items?.category === entry.items?.category &&
+      e.scores?.category_rank !== null
+  );
+  const categoryTotal = categoryRankedItems.length;
+
+  // Subcategory ranking: sort owned items in the same subtype by category_rank ascending
+  const subtypeName = entry.items?.subtypes?.name ?? "Other";
+  const subtypeItems = entries
+    .filter(
+      (e) =>
+        e.entry_type === "owned" &&
+        (e.items?.subtypes?.name ?? "Other") === subtypeName &&
+        e.scores?.category_rank !== null
+    )
+    .sort((a, b) => {
+      const ra = a.scores?.category_rank ?? 9999;
+      const rb = b.scores?.category_rank ?? 9999;
+      return ra - rb;
+    });
+  const subtypeRankPosition =
+    subtypeItems.findIndex((e) => e.id === closetEntryId) + 1;
+  const showSubtypeRank = subtypeItems.length >= 2 && subtypeRankPosition > 0;
+
   return (
     <ScrollView className="flex-1 bg-white p-4">
       <Text className="text-2xl font-bold mb-1">{entry.items?.model_name}</Text>
-      <Text className="text-gray-500 mb-4">
-        {entry.items?.brands?.name} · {entry.color}
+      <Text className="text-gray-500 mb-6">
+        {entry.items?.brands?.name}{entry.color ? ` · ${entry.color}` : ""}
       </Text>
 
-      {/* Score breakdown */}
+      {/* Score badges */}
       {score ? (
-        <View className="mb-6">
-          <Text className="text-lg font-semibold mb-3">Scores</Text>
-          <View className="flex-row gap-3 mb-4">
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-3xl font-bold">{score.overall_score.toFixed(1)}</Text>
-              <Text className="text-xs text-gray-500">Overall</Text>
-            </View>
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-3xl font-bold">{score.category_score.toFixed(1)}</Text>
-              <Text className="text-xs text-gray-500 capitalize">{entry.items?.category}</Text>
-            </View>
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-3xl font-bold">{score.wins + score.losses}</Text>
-              <Text className="text-xs text-gray-500">Comparisons</Text>
-            </View>
+        <View className="flex-row gap-3 mb-6">
+          {/* Overall score */}
+          <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
+            <Text className="text-3xl font-bold">
+              {score.overall_score !== null ? score.overall_score.toFixed(1) : "—"}
+            </Text>
+            <Text className="text-xs text-gray-500 text-center">Overall score</Text>
           </View>
-          <Text className="text-sm text-gray-500">
-            {score.wins}W – {score.losses}L · Confidence:{" "}
-            <Text className="capitalize font-medium">{score.confidence}</Text>
-          </Text>
+
+          {/* Category ranking */}
+          {score.category_rank !== null && (
+            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
+              <Text className="text-3xl font-bold">{toOrdinal(score.category_rank)}</Text>
+              <Text className="text-xs text-gray-500 text-center capitalize">
+                of {categoryTotal} {entry.items?.category}
+              </Text>
+            </View>
+          )}
+
+          {/* Subcategory ranking */}
+          {showSubtypeRank && (
+            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
+              <Text className="text-3xl font-bold">{toOrdinal(subtypeRankPosition)}</Text>
+              <Text className="text-xs text-gray-500 text-center">
+                of {subtypeItems.length} {subtypeName}
+              </Text>
+            </View>
+          )}
         </View>
       ) : (
-        <Text className="text-gray-400 mb-6">No comparisons yet.</Text>
+        <Text className="text-gray-400 mb-6">No ranking yet.</Text>
       )}
 
       {/* Write Review button */}
       <TouchableOpacity
-        className="bg-black rounded-xl py-3 items-center mb-6"
+        className="bg-black rounded-xl py-3 items-center mb-4"
         onPress={() => navigation.navigate("WriteReview", { itemId: entry.item_id })}
       >
         <Text className="text-white font-semibold">Write Review</Text>
       </TouchableOpacity>
 
-      {/* Comparison history */}
-      <Text className="text-lg font-semibold mb-3">Comparison History</Text>
-      {historyLoading ? (
-        <ActivityIndicator />
-      ) : history.length === 0 ? (
-        <Text className="text-gray-400">No comparisons yet.</Text>
-      ) : (
-        history.map((h) => (
-          <View key={h.id} className="flex-row items-center py-2 border-b border-gray-100">
-            <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-              h.outcome === "win" ? "bg-green-100" : "bg-red-100"
-            }`}>
-              <Text className={h.outcome === "win" ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
-                {h.outcome === "win" ? "W" : "L"}
-              </Text>
-            </View>
-            <View className="flex-1">
-              <Text className="font-medium">{h.opponentItemName}</Text>
-              <Text className="text-xs text-gray-400 capitalize">
-                {h.comparisonType.replace("_", " ")}
-              </Text>
-            </View>
-          </View>
-        ))
-      )}
+      {/* Product link placeholder */}
+      <View className="border border-dashed border-gray-200 rounded-xl py-3 px-4 items-center mt-2">
+        <Text className="text-gray-400 text-sm">Product link — coming soon</Text>
+      </View>
     </ScrollView>
   );
 }
