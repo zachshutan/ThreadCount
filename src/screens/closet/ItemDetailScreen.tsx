@@ -4,6 +4,7 @@ import {
 } from "react-native";
 import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native";
 import { useCloset } from "../../hooks/useCloset";
+import { useItemReviews } from "../../hooks/useItemReviews";
 
 type ItemDetailRouteParams = { closetEntryId: string };
 
@@ -21,6 +22,8 @@ export default function ItemDetailScreen() {
   const { entries, loading: closetLoading } = useCloset();
 
   const entry = entries.find((e) => e.id === closetEntryId);
+
+  const { reviews, loading: reviewsLoading } = useItemReviews(entry?.item_id ?? "");
 
   if (closetLoading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
@@ -116,6 +119,29 @@ export default function ItemDetailScreen() {
       {/* Product link placeholder */}
       <View className="border border-dashed border-gray-200 rounded-xl py-3 px-4 items-center mt-2">
         <Text className="text-gray-400 text-sm">Product link — coming soon</Text>
+      </View>
+
+      {/* Recent Reviews */}
+      <View className="mt-8">
+        <Text className="text-lg font-bold mb-3">Recent Reviews</Text>
+        {reviewsLoading ? (
+          <ActivityIndicator />
+        ) : reviews.length === 0 ? (
+          <Text className="text-gray-400 text-sm">No reviews yet.</Text>
+        ) : (
+          reviews.slice(0, 5).map((review) => (
+            <View key={review.id} className="bg-gray-50 rounded-xl p-4 mb-3">
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="font-semibold text-sm">@{review.profiles?.username ?? "unknown"}</Text>
+                <View className="flex-row gap-3">
+                  <Text className="text-xs text-gray-500">Fit {review.fit_rating}/5</Text>
+                  <Text className="text-xs text-gray-500">Quality {review.quality_rating}/5</Text>
+                </View>
+              </View>
+              <Text className="text-sm text-gray-700">{review.body}</Text>
+            </View>
+          ))
+        )}
       </View>
     </ScrollView>
   );
