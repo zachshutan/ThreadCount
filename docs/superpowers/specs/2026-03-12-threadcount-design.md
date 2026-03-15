@@ -27,6 +27,7 @@ Threadcount is a brand-agnostic clothing and footwear review and ranking platfor
 - name (text, NOT NULL)
 - logo_url (text)
 - slug (text, UNIQUE NOT NULL)
+- website_url (text) — brand's official website; used to display a "Visit website" link on BrandScreen and as a fallback for Clearbit logo lookup (`https://logo.clearbit.com/{domain}`)
 
 **items**
 - id (uuid, PK)
@@ -64,7 +65,7 @@ Threadcount is a brand-agnostic clothing and footwear review and ranking platfor
 - user_id (uuid, FK → auth.users.id, NOT NULL)
 - winner_entry_id (uuid, **NULLABLE**, FK → closet_entries.id ON DELETE SET NULL)
 - loser_entry_id (uuid, **NULLABLE**, FK → closet_entries.id ON DELETE SET NULL)
-- comparison_type (enum: `same_category | cross_category`, NOT NULL)
+- comparison_type (enum: `same_category | cross_category | ranking`, NOT NULL) — `ranking` is used for all comparisons made during the binary search ranking session when a new item is added
 - created_at (timestamptz, DEFAULT now())
 - CHECK: `winner_entry_id IS DISTINCT FROM loser_entry_id` (handles NULLs correctly — a row where both are NULL after cascade is permitted; a live insert where both reference the same entry is rejected)
 - Trigger (INSERT only — not UPDATE): at insert time, both `winner_entry_id` and `loser_entry_id` must be non-NULL, must reference rows in `closet_entries` where `entry_type = 'owned'` AND `user_id = auth.uid()`. The trigger does not fire on UPDATE, so SET NULL cascades are not blocked.
@@ -95,13 +96,14 @@ Threadcount is a brand-agnostic clothing and footwear review and ranking platfor
 - item_id (uuid, FK → items.id, NOT NULL) *(denormalized at insert from closet_entry → item)*
 - user_id (uuid, FK → auth.users.id, NOT NULL) *(denormalized at insert)*
 - category (enum: `top | bottom | footwear`, NOT NULL) *(denormalized at insert from item; not updated if item.category changes)*
-- category_score (numeric, DEFAULT 5.0)
-- overall_score (numeric, DEFAULT 5.0)
-- wins (integer, DEFAULT 0, NOT NULL)
-- losses (integer, DEFAULT 0, NOT NULL)
-- category_wins (integer, DEFAULT 0, NOT NULL)
-- category_losses (integer, DEFAULT 0, NOT NULL)
-- confidence (enum: `low | medium | high`, DEFAULT 'low')
+- **category_rank** (integer, NULLABLE) — the item's exact position within the user's owned items in this category (1 = best). NULL means the item has not been ranked yet. This column drives the score formula.
+- overall_score (numeric, DEFAULT 5.0) — computed from `category_rank` using the rank-based formula; updated by `recalculateCategoryScores` after any rank change
+- category_score (numeric, DEFAULT 5.0) — same as `overall_score` in the current model (retained for backwards compatibility)
+- wins (integer, DEFAULT 0, NOT NULL) — **no longer updated**; retained for backwards compatibility with older rows
+- losses (integer, DEFAULT 0, NOT NULL) — **no longer updated**; retained for backwards compatibility
+- category_wins (integer, DEFAULT 0, NOT NULL) — **no longer updated**
+- category_losses (integer, DEFAULT 0, NOT NULL) — **no longer updated**
+- confidence (enum: `low | medium | high`, DEFAULT 'low') — **no longer used**; retained for backwards compatibility
 - updated_at (timestamptz, DEFAULT now())
 
 **follows**
@@ -114,13 +116,23 @@ Threadcount is a brand-agnostic clothing and footwear review and ranking platfor
 
 ### Score Calculation Rules
 
-- `overall_score = wins / (wins + losses) * 10`; if `(wins + losses) = 0`, keep default 5.0 (do not divide)
-- `category_score = category_wins / (category_wins + category_losses) * 10`; if sum = 0, keep default 5.0
-- Scores are updated **incrementally** on each comparison write (service role):
-  - Winner entry: `wins += 1`; if `comparison_type = same_category`, also `category_wins += 1`
-  - Loser entry: `losses += 1`; if `comparison_type = same_category`, also `category_losses += 1`
-  - After incrementing, recalculate and write `overall_score`, `category_score`, `confidence`, `updated_at`
-- Confidence is based on `wins + losses` (total comparisons): low = 0–4, medium = 5–15, high = 16+
+Scores are based on **exact rank position** within a category, not win/loss counts.
+
+**Formula:** `score = 10 - ((rank - 1) / max(totalInCategory - 1, 1)) * 9`
+
+| Rank | Total items | Score |
+|------|-------------|-------|
+| 1 | 1 | 10.0 |
+| 1 | 5 | 10.0 |
+| 3 | 5 | 5.5 |
+| 5 | 5 | 1.0 |
+
+- Scores always display as one decimal place (e.g., 8.5)
+- Scores are recalculated for **all items in the category** whenever any item's rank changes (add, delete, re-rank). This is done by `scoreService.recalculateCategoryScores(userId, category)`.
+- The ranking scope is **category** (top / bottom / footwear). Subtypes (T-Shirt, Hoodie, Sneaker, etc.) are used for display grouping in the closet, not for ranking.
+- Items with `category_rank = NULL` are unranked and show "Unranked · Tap to rank" in the UI. They receive no score.
+
+**Rank assignment:** When an owned item is added, a binary search ranking session determines its insertion position among existing ranked items. `ceil(log₂(N+1))` comparisons are needed at most, where N is the number of already-ranked items in the category.
 
 ### Aggregate Item Scores (Browse / ItemScreen)
 
@@ -183,15 +195,14 @@ RootNavigator
 │   ├── WelcomeScreen
 │   ├── SignUpScreen
 │   └── LogInScreen
-└── MainTabs (authenticated)
-    ├── HomeTab      → ForYouFeedScreen
-    ├── BrowseTab    → BrowseScreen → BrandScreen → ItemScreen
-    ├── ClosetTab    → ClosetScreen → ItemDetailScreen
-    ├── CompareTab   → ComparisonScreen
-    └── SearchTab    → SearchScreen
-
-Shared modal screens (reachable from multiple tabs):
-  PublicClosetScreen  — shown when tapping a user from Feed or ItemScreen reviewer list
+└── Root stack (authenticated)
+    ├── MainTabs  ← 4 tabs with Ionicons (Home, Browse, Closet, Search)
+    │   ├── HomeTab      → ForYouFeedScreen
+    │   ├── BrowseTab    → BrowseScreen → BrandScreen → ItemScreen
+    │   ├── ClosetTab    → ClosetScreen → ItemDetailScreen → WriteReviewScreen
+    │   └── SearchTab    → SearchScreen
+    ├── PublicClosetScreen (modal — shown when tapping a user from Feed or ItemScreen)
+    └── RankingComparisonScreen (full-screen modal — launched automatically after adding an owned item)
 ```
 
 *PublicClosetScreen:* Displays another user's public closet (their owned + interested items with scores). Includes a Follow/Unfollow button. Tapping an item navigates to ItemScreen.
@@ -217,33 +228,34 @@ Shared modal screens (reachable from multiple tabs):
 
 ### 2. Browse
 - BrowseScreen: paginated grid of all brands (logo + name), 20 per page
-- BrandScreen: list of active items for a brand
+- BrandScreen: brand header with logo (from `logo_url`; falls back to Clearbit: `https://logo.clearbit.com/{domain}` when `website_url` is set); item count; "↗ Visit website" link (shown only if `website_url` is set, opens in system browser); list of active items for the brand
 - ItemScreen: images (sorted by `sort_order`), aggregate avg overall score + avg category score (omitted if < 3 scorers), all public reviews with reviewer username
 
 ### 3. Add to Closet
 - From ItemScreen: "Add to Closet" → select Owned or Interested + color (required)
 - Saves `closet_entry`
-- If Owned: also creates `scores` row (zeros, defaults to 5.0, confidence = low); triggers comparison flow (skippable)
+- If Owned: also creates `scores` row (with `category_rank = NULL`); immediately launches the **ranking session** (RankingComparisonScreen) — not skippable. If the user cancels mid-session, the closet entry is deleted entirely (rollback).
 - Interested: saves entry only; no scores row created
-- Upgrading an Interested entry to Owned: UPDATE `entry_type`; application creates `scores` row if absent; triggers comparison flow
+- Upgrading an Interested entry to Owned: UPDATE `entry_type`; application creates `scores` row if absent; launches ranking session
 
-### 4. Pairwise Comparison
-- Triggered automatically after adding/upgrading an owned item (skippable); also accessible on demand from CompareTab
-- Full-screen card UI showing two owned items side by side; user taps their preference
-- On choice: writes `comparisons` row (INSERT only); service incrementally updates `scores` for both entries
-- Comparison queue algorithm (in-memory per session; counter resets on session start):
-  - Default: draw same-category pairs (shuffle all eligible owned pairs within the same category)
-  - Every 5th comparison in a session is cross-category, IF the user owns items in ≥2 different categories
-  - If no same-category pairs are available (only 1 owned item in a category), fall back to cross-category
-  - If no valid pairs of any type exist, show empty state and exit
-- Only `entry_type = owned` items are eligible; enforced at both UI level and DB trigger level
-- User can exit at any time; all completed comparisons are persisted
+### 4. Ranking Session (replaces Pairwise Comparison tab)
+- Triggered automatically after adding/upgrading an owned item; **not skippable**
+- Full-screen modal (RankingComparisonScreen) showing two owned items side by side; user taps their preference — "Pick your favorite"
+- Algorithm: **binary search insertion sort** — finds the new item's exact rank position among existing ranked items in the same category
+  - 0 existing items → auto rank 1, score 10.0, no comparisons shown
+  - N existing items → at most `ceil(log₂(N+1))` comparisons (e.g., 10 items = 4 comparisons max)
+  - Progress bar shows "Comparison X of Y" so the session feels finite
+- On each choice: writes `comparisons` row with `comparison_type = 'ranking'`; scores are NOT updated incrementally — ranks are assigned all at once after the final comparison
+- After the final comparison: `recalculateCategoryScores` runs for all items in the category; success screen shows the new item's rank (#N) and score
+- If user tries to navigate away before finishing: native alert warns them; if they confirm, the closet entry is deleted (rollback)
+- There is no standalone Compare tab
 
 ### 5. Closet
-- Grid/list of all closet entries (owned and interested)
-- Owned items: show overall score + confidence badge
-- Interested items: show no score (no scores row exists); display "Wishlist" label
-- Tap owned item → ItemDetailScreen: overall score, category score, wins/losses, comparison history (opponent item name + outcome; shows "Unknown item" if opponent's entry was deleted), option to write review
+- Two tabs: **Owned** and **Wishlist**
+- **Owned tab:** SectionList grouped by subtype (e.g., "T-Shirt", "Sneaker"). Within each section, items are sorted by `category_rank ASC` (best first). A horizontal scrollable filter pill bar at the top lets users narrow to one subtype ("All", "T-Shirt", "Hoodie", etc.) — only subtypes the user actually owns are shown.
+- Each owned item card shows: item name, brand, color, rank badge (e.g., "#2"), and score (e.g., "8.5"). Items with `category_rank = NULL` show "Unranked · Tap to rank".
+- **Wishlist tab:** flat list of interested entries; no score shown; "Wishlist" badge displayed.
+- Tap owned item → ItemDetailScreen: score breakdown + comparison history (opponent item name + outcome; shows "Unknown item" if opponent's entry was deleted), option to write review
 - Tap interested item → ItemScreen for that item
 
 ### 6. Reviews

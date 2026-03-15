@@ -15,7 +15,8 @@ threadcount/
 ├── plans/                         # Implementation plans (read before coding)
 │   ├── plan-1.md
 │   ├── plan-2.md
-│   └── plan-3.md
+│   ├── plan-3.md
+│   └── BACKLOG.md                 # Deferred features (tag filters, brand follows, etc.)
 ├── supabase/
 │   └── migrations/                # SQL files applied to the Supabase database
 │       ├── 001_create_tables.sql
@@ -23,7 +24,8 @@ threadcount/
 │       ├── 003_triggers.sql
 │       ├── 004_seed_subtypes.sql
 │       ├── 005_review_gate_rpc.sql
-│       └── 006_feed_rpc.sql
+│       ├── 006_feed_rpc.sql
+│       └── 007_rank_based_scoring.sql  # Adds category_rank to scores, website_url to brands
 └── src/
     ├── __tests__/                 # All tests (mirror the src structure)
     │   ├── context/
@@ -78,13 +80,13 @@ Services contain raw Supabase queries. They are plain async TypeScript functions
 | File | What it does |
 |---|---|
 | `authService.ts` | Sign up, sign in, sign out, Google OAuth |
-| `brandService.ts` | Fetch paginated list of brands |
+| `brandService.ts` | Fetch paginated list of brands; fetch a single brand by ID (includes `website_url`) |
 | `itemService.ts` | Fetch items by brand, fetch single item, search items, aggregate scores |
 | `imageService.ts` | Fetch images for an item |
 | `reviewService.ts` | Submit a review (via Edge Function), fetch reviews for an item |
-| `closetService.ts` | Fetch user's closet, add item, upgrade wishlist→owned, comparison history |
-| `comparisonService.ts` | Record a comparison result and update scores for both items |
-| `scoreService.ts` | Create a new score row for an owned item, increment win/loss counts |
+| `closetService.ts` | Fetch user's closet (includes score data in one query), add item, upgrade wishlist→owned, comparison history |
+| `comparisonService.ts` | Record a ranking comparison (`recordRankingComparison` — type "ranking") |
+| `scoreService.ts` | Create a score row; fetch ranked peers for a category (`fetchRankedPeers`); shift and recalculate all ranks after a change (`recalculateCategoryScores`) |
 | `followService.ts` | Follow a user, unfollow, check follow status, get a user's public closet |
 | `feedService.ts` | Fetch the For You feed (calls the `get_feed` Supabase RPC) |
 | `searchService.ts` | Search brands and items by name using case-insensitive matching |
@@ -103,10 +105,10 @@ Hooks wrap services with React state management. They always return an object wi
 | `useItem.ts` | `{ item, aggregateScores, loading }` — single item with community scores |
 | `useItemImages.ts` | `{ images, loading }` — images for an item |
 | `useItemReviews.ts` | `{ reviews, loading }` — reviews for an item |
-| `useCloset.ts` | `{ entries, owned, interested, loading, error, refresh }` — current user's full closet |
+| `useCloset.ts` | `{ entries, owned, interested, ownedBySubtype, subtypeNames, loading, error, refresh }` — full closet; score data fetched in the same query (no N+1); `ownedBySubtype` is a grouped + sorted list ready for SectionList |
 | `useClosetEntry.ts` | `{ entry, loading, refetch }` — a single item's closet status for the current user |
-| `useComparisonQueue.ts` | `{ currentPair, progress, totalPairs, completedPairs, advance }` — session comparison queue |
-| `useScores.ts` | `{ score, loading }` — score row for a given closet entry |
+| `useRankingSession.ts` | `{ isLoading, isFinalizing, isDone, currentComparator, totalComparisons, comparisonCount, finalRank, totalItems, handleNewItemWins, handlePeerWins }` — drives the binary search ranking flow after an item is added |
+| `useScores.ts` | `{ score, loading }` — score row for a given closet entry (still used in ItemDetailScreen) |
 | `useFollow.ts` | `{ following, loading, toggling, toggle }` — follow state for a given user |
 | `useFeed.ts` | `{ events, loading, refreshing, hasMore, refresh, loadMore, setFilter }` — For You feed |
 | `useSearch.ts` | `{ query, results, loading, runSearch }` — search state |
@@ -129,12 +131,12 @@ Screens are organized by feature tab. Each screen file renders one view.
 - `AddToClosetModal.tsx` — bottom sheet for choosing a color and adding an item to your closet
 
 ### Closet screens (`src/screens/closet/`)
-- `ClosetScreen.tsx` — Owned / Wishlist tabs with scores on each card
+- `ClosetScreen.tsx` — Owned tab shows a SectionList grouped by subtype (T-Shirt, Sneaker, etc.) sorted by rank; horizontal filter pills at the top let the user narrow to one subtype. Wishlist tab unchanged.
 - `ItemDetailScreen.tsx` — score breakdown + comparison history for one owned item
 - `WriteReviewScreen.tsx` — form to write a review (body text + fit/quality ratings 1–5)
 
 ### Compare screen (`src/screens/compare/`)
-- `ComparisonScreen.tsx` — two items side-by-side; tap one to pick it; progress bar at top
+- `RankingComparisonScreen.tsx` — full-screen modal that launches automatically after an item is added to the closet. Shows a binary search ranking session: "Pick your favorite" between the new item and an existing item. Progress bar shows how many comparisons remain. After the last comparison, shows the item's final rank and score. Cannot be dismissed mid-session without cancelling (which removes the item from the closet).
 
 ### Feed screen (`src/screens/feed/`)
 - `ForYouFeedScreen.tsx` — activity feed with Everyone / Friends toggle; cursor-paginated
@@ -151,7 +153,8 @@ Reusable UI pieces shared by multiple screens.
 | File | What it does |
 |---|---|
 | `AddToClosetButton.tsx` | Shows current closet state for an item ("Add to Closet", "In Your Closet ✓", "In Wishlist — Mark as Owned?") and opens the AddToClosetModal |
-| `ClosetEntryCard.tsx` | A single row in the Closet list — shows item name, brand, color, score (if owned), or Wishlist badge |
+| `ClosetEntryCard.tsx` | A single row in the Closet list — shows item name, brand, color; for owned items shows a rank badge (#1, #2, etc.) and score (e.g. "8.5"); for unranked items shows "Unranked · Tap to rank"; for wishlist items shows a Wishlist badge. Score data comes from the closet query — no separate network call per card. |
+| `SubcategoryPlaceholder.tsx` | Animated SVG silhouette shown in the ranking comparison cards when no product image is available. Accepts a `subtypeName` prop (e.g. "T-Shirt", "Sneaker") and renders a matching line-art illustration with a slow breathing opacity animation. Covers all 15 subtypes plus a generic fallback. |
 
 ---
 
@@ -166,7 +169,7 @@ RootNavigator
 │   ├── SignUpScreen
 │   └── LogInScreen
 └── Root stack (shown when logged in)
-    ├── MainTabs
+    ├── MainTabs  ← 4 tabs (Home, Browse, Closet, Search) with Ionicons
     │   ├── Home tab → ForYouFeedScreen
     │   ├── Browse tab → BrowseStack
     │   │   ├── BrowseScreen
@@ -176,15 +179,14 @@ RootNavigator
     │   │   ├── ClosetScreen
     │   │   ├── ItemDetailScreen
     │   │   └── WriteReviewScreen
-    │   ├── Compare tab → ComparisonScreen
     │   └── Search tab → SearchScreen
-    └── PublicClosetScreen (modal, accessible from any tab)
+    ├── PublicClosetScreen (modal, accessible from any tab)
+    └── RankingComparisonScreen (full-screen modal, launched automatically after adding an owned item)
 ```
 
-Type definitions for navigation params live in `src/navigation/MainTabs.tsx`:
-- `BrowseStackParamList` — params for Browse tab screens
-- `ClosetStackParamList` — params for Closet tab screens
-- `MainTabsParamList` — the five bottom tabs
+Type definitions for navigation params live in two files:
+- `src/navigation/RootNavigator.tsx` exports `RootStackParamList` — includes `MainTabs`, `PublicCloset`, and `RankingComparison` (with params: `newEntryId`, `userId`, `category`, `itemName`, `subtypeName`)
+- `src/navigation/MainTabs.tsx` exports `BrowseStackParamList`, `ClosetStackParamList`, and `MainTabsParamList` (the four bottom tabs)
 
 ---
 
@@ -235,7 +237,7 @@ The Supabase client is created once in `src/lib/supabase.ts`:
 | `items` | Individual products with brand and category |
 | `images` | Product images linked to items |
 | `closet_entries` | A user's owned or wishlisted items |
-| `scores` | ELO-style scores per owned item (updated after each comparison) |
+| `scores` | Rank-based scores per owned item — `category_rank` (integer position within the category) drives the score formula |
 | `comparisons` | Every head-to-head comparison a user has made |
 | `reviews` | Text reviews with fit and quality ratings |
 | `follows` | Follow relationships between users |
@@ -246,27 +248,57 @@ The Supabase client is created once in `src/lib/supabase.ts`:
 
 The scoring system lives in `src/lib/scoring.ts` (pure math, no React or Supabase).
 
-- Every owned item starts at `5.0` overall and `5.0` category score
-- After each comparison, wins and losses are incremented and scores are recalculated
-- `calculateOverallScore(wins, losses)` — maps win rate to a 0–10 scale
-- `calculateCategoryScore(categoryWins, categoryLosses)` — same formula for within-category matchups
-- `calculateConfidence(totalComparisons)` — returns "low" (0–4), "medium" (5–15), or "high" (16+)
+Scores are based on **exact rank position** within a category (top / bottom / footwear), not win/loss ratio.
 
-Score updates happen in `scoreService.incrementScore()`, which is called automatically by `comparisonService.recordComparison()` after every comparison.
+**Formula:**
+```
+score = 10 - ((rank - 1) / max(totalInCategory - 1, 1)) * 9
+```
+
+Examples:
+- Rank 1 of 1 → 10.0 (only item in the category)
+- Rank 1 of 5 → 10.0 (best in category)
+- Rank 3 of 5 → 5.5
+- Rank 5 of 5 → 1.0 (last in category)
+- Always displayed as one decimal place (e.g., 8.5, not 8.50)
+
+**Key function:** `calculateScoreFromRank(rank, totalInCategory)` in `src/lib/scoring.ts`
+
+**How ranks are assigned:**
+1. When an owned item is added, a binary search ranking session launches automatically (see Ranking Flow below)
+2. The session finds the item's insertion point among existing ranked items in the same **category**
+3. `scoreService.recalculateCategoryScores(userId, category)` is called after any rank change — it renumbers all ranks and recomputes all scores for every item in the category in one operation
+
+**Ranking scope:** Category level only — tops compete against other tops, bottoms against bottoms, footwear against footwear. The subtype (T-Shirt, Hoodie, Sneaker, etc.) is display and grouping metadata only, not a ranking boundary.
+
+**Unranked items:** Items with a `NULL` `category_rank` are shown as "Unranked · Tap to rank" in the closet. This can happen for items added before the ranking system was introduced.
 
 ---
 
-## Comparison Queue
+## Ranking Flow
 
-The in-memory comparison queue lives in `src/lib/comparisonQueue.ts` (pure TypeScript, no React or Supabase).
+When a user marks an item as owned, the app immediately launches a ranking session to determine where the new item belongs among their existing items.
 
-`buildQueue(entries)` takes a list of owned items and produces an ordered list of comparison pairs:
-1. All same-category pairs are generated first (e.g., all sneaker vs. sneaker matchups)
-2. Cross-category pairs (e.g., sneaker vs. t-shirt) are injected at every 5th position
-3. If no same-category pairs exist, only cross-category pairs are used
-4. The queue is rebuilt from scratch each session — no persistent order
+**Algorithm: Binary Search Insertion Sort**
 
-The queue is consumed by `useComparisonQueue` (hook) and `ComparisonScreen` (UI).
+The logic lives in `src/lib/binarySearchRanker.ts` (pure TypeScript, no React or Supabase).
+
+1. Fetch all existing owned items in the same category, sorted by `category_rank ASC`
+2. If 0 existing items → auto-assign rank 1, score 10.0. No comparisons needed.
+3. If N existing items → binary search:
+   - Compare the new item vs. the item at the midpoint of the current search range
+   - "Pick your favorite: [new item] vs [existing item]?"
+   - If the new item wins → search the better half; if it loses → search the other half
+   - Repeat until the exact insertion position is found
+   - Maximum comparisons = `ceil(log₂(N + 1))` — for 10 items, at most 4 comparisons
+4. Insert the new item at the found position; all items below it shift down by 1
+5. Recalculate scores for every item in the category from their new ranks
+
+**Session state** is managed by `src/hooks/useRankingSession.ts`, which drives `RankingComparisonScreen`.
+
+**Comparison records:** Each head-to-head choice is written to the `comparisons` table with `comparison_type = 'ranking'` via `comparisonService.recordRankingComparison()`. These are stored for history but do not affect scores — only ranks do.
+
+**Abandoning mid-session:** If the user tries to navigate away, a native alert warns them that the item won't be ranked. If they confirm cancellation, the closet entry is deleted (rollback). The closet never contains partially-configured items.
 
 ---
 
@@ -279,8 +311,13 @@ The queue is consumed by `useComparisonQueue` (hook) and `ComparisonScreen` (UI)
 | Auth state | `src/context/AuthContext.tsx` |
 | Google sign-in | `src/services/authService.ts` |
 | Database schema | `supabase/migrations/001_create_tables.sql` |
-| Scoring math | `src/lib/scoring.ts` |
-| Comparison queue algorithm | `src/lib/comparisonQueue.ts` |
+| Rank-based scoring math | `src/lib/scoring.ts` — `calculateScoreFromRank(rank, total)` |
+| Binary search ranking algorithm | `src/lib/binarySearchRanker.ts` |
+| Closet grouping helpers | `src/lib/closetUtils.ts` — `groupOwnedBySubtype`, `getOwnedSubtypeNames` |
+| Ranking session state machine | `src/hooks/useRankingSession.ts` |
+| Ranking UI (comparison cards) | `src/screens/compare/RankingComparisonScreen.tsx` |
+| Animated SVG placeholders | `src/components/SubcategoryPlaceholder.tsx` |
 | Auto-generated DB types | `src/types/database.ts` |
 | Navigation structure | `src/navigation/RootNavigator.tsx` + `src/navigation/MainTabs.tsx` |
 | Implementation plans | `plans/plan-1.md`, `plan-2.md`, `plan-3.md` |
+| Deferred feature backlog | `plans/BACKLOG.md` |
