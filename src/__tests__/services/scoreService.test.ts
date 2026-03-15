@@ -1,4 +1,4 @@
-import { createScoreRow, incrementScore } from "../../services/scoreService";
+import { createScoreRow, incrementScore, setCategoryRank, recalculateCategoryScores } from "../../services/scoreService";
 import { supabase } from "../../lib/supabase";
 import {
   calculateOverallScore,
@@ -82,5 +82,89 @@ describe("incrementScore — winner", () => {
     expect(updateArg.overall_score).toBeCloseTo(expectedOverall);
     expect(updateArg.category_score).toBeCloseTo(expectedCategory);
     expect(updateArg.confidence).toBe(expectedConfidence);
+  });
+});
+
+describe("setCategoryRank", () => {
+  it("updates category_rank for the given closet entry", async () => {
+    const eqMock = jest.fn().mockResolvedValue({ error: null });
+    const updateMock = jest.fn().mockReturnValue({ eq: eqMock });
+    mockFrom.mockReturnValue({ update: updateMock });
+
+    await setCategoryRank({ closetEntryId: "entry-1", rank: 2 });
+
+    expect(updateMock).toHaveBeenCalledWith({ category_rank: 2 });
+    expect(eqMock).toHaveBeenCalledWith("closet_entry_id", "entry-1");
+  });
+});
+
+describe("recalculateCategoryScores", () => {
+  it("recalculates overall_score for all ranked items using rank formula", async () => {
+    const rankedItems = [
+      { id: "score-1", category_rank: 1 },
+      { id: "score-2", category_rank: 2 },
+      { id: "score-3", category_rank: 3 },
+    ];
+
+    // Build the select chain: .select().eq().eq().not().order() → data
+    const orderMock = jest.fn().mockResolvedValue({ data: rankedItems, error: null });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+
+    // Build the update chain: .update().eq() → success
+    const eqUpdateMock = jest.fn().mockResolvedValue({ error: null });
+    const updateMock = jest.fn().mockReturnValue({ eq: eqUpdateMock });
+
+    mockFrom.mockReturnValue({ select: selectMock, update: updateMock });
+
+    await recalculateCategoryScores({ userId: "user-1", category: "top" });
+
+    // 3 items total:
+    // rank 1 → 10 - (0/2)*9 = 10.0
+    // rank 2 → 10 - (1/2)*9 = 5.5
+    // rank 3 → 10 - (2/2)*9 = 1.0
+    expect(updateMock).toHaveBeenCalledTimes(3);
+
+    const updateArgs = updateMock.mock.calls.map((call) => call[0]);
+    expect(updateArgs[0].overall_score).toBeCloseTo(10.0);
+    expect(updateArgs[1].overall_score).toBeCloseTo(5.5);
+    expect(updateArgs[2].overall_score).toBeCloseTo(1.0);
+  });
+
+  it("does nothing when no ranked items exist", async () => {
+    const orderMock = jest.fn().mockResolvedValue({ data: [], error: null });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+    const updateMock = jest.fn();
+
+    mockFrom.mockReturnValue({ select: selectMock, update: updateMock });
+
+    await recalculateCategoryScores({ userId: "user-1", category: "top" });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("single ranked item gets a score of 10.0", async () => {
+    const rankedItems = [{ id: "score-1", category_rank: 1 }];
+
+    const orderMock = jest.fn().mockResolvedValue({ data: rankedItems, error: null });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+
+    const eqUpdateMock = jest.fn().mockResolvedValue({ error: null });
+    const updateMock = jest.fn().mockReturnValue({ eq: eqUpdateMock });
+
+    mockFrom.mockReturnValue({ select: selectMock, update: updateMock });
+
+    await recalculateCategoryScores({ userId: "user-1", category: "footwear" });
+
+    expect(updateMock).toHaveBeenCalledTimes(1);
+    expect(updateMock.mock.calls[0][0].overall_score).toBeCloseTo(10.0);
   });
 });

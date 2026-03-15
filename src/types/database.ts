@@ -21,18 +21,21 @@ export type Database = {
           logo_url: string | null
           name: string
           slug: string
+          website_url: string | null
         }
         Insert: {
           id?: string
           logo_url?: string | null
           name: string
           slug: string
+          website_url?: string | null
         }
         Update: {
           id?: string
           logo_url?: string | null
           name?: string
           slug?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -274,6 +277,7 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["item_category"]
           category_losses: number
+          category_rank: number | null
           category_score: number
           category_wins: number
           closet_entry_id: string
@@ -289,6 +293,7 @@ export type Database = {
         Insert: {
           category: Database["public"]["Enums"]["item_category"]
           category_losses?: number
+          category_rank?: number | null
           category_score?: number
           category_wins?: number
           closet_entry_id: string
@@ -304,6 +309,7 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["item_category"]
           category_losses?: number
+          category_rank?: number | null
           category_score?: number
           category_wins?: number
           closet_entry_id?: string
@@ -375,7 +381,7 @@ export type Database = {
         | "purple"
         | "multicolor"
         | "other"
-      comparison_type_enum: "same_category" | "cross_category"
+      comparison_type_enum: "same_category" | "cross_category" | "ranking"
       confidence_level: "low" | "medium" | "high"
       entry_type_enum: "owned" | "interested"
       image_source_type: "seed"
@@ -524,7 +530,7 @@ export const Constants = {
         "multicolor",
         "other",
       ],
-      comparison_type_enum: ["same_category", "cross_category"],
+      comparison_type_enum: ["same_category", "cross_category", "ranking"],
       confidence_level: ["low", "medium", "high"],
       entry_type_enum: ["owned", "interested"],
       image_source_type: ["seed"],

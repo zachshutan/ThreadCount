@@ -1,6 +1,17 @@
 export type ConfidenceLevel = "low" | "medium" | "high";
 
 /**
+ * Calculates a display score (1.0–10.0) from an exact rank position.
+ * rank 1 = best = 10.0, rank totalInCategory = worst = 1.0.
+ * When only one item exists in the category, it always receives 10.0.
+ *
+ * Formula: 10 - ((rank - 1) / max(totalInCategory - 1, 1)) * 9
+ */
+export function calculateScoreFromRank(rank: number, totalInCategory: number): number {
+  return 10 - ((rank - 1) / Math.max(totalInCategory - 1, 1)) * 9;
+}
+
+/**
  * Calculates overall score (0–10) from wins and losses.
  * Returns 5.0 if no comparisons have been made (avoids division by zero).
  */
