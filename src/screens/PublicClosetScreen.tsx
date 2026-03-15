@@ -61,7 +61,7 @@ export default function PublicClosetScreen() {
         <View className="flex-row gap-6">
           <View className="items-center">
             <Text className="text-xl font-bold">{ownedCount}</Text>
-            <Text className="text-xs text-gray-500">Items</Text>
+            <Text className="text-xs text-gray-500">Owned</Text>
           </View>
           <View className="items-center">
             <Text className="text-xl font-bold">{followerCount}</Text>
