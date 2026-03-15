@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, ActivityIndicator,
+  View, Text, SectionList, TouchableOpacity, ActivityIndicator,
   Image, Linking,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { BrowseStackParamList } from "../../navigation/MainTabs";
 import { useItems } from "../../hooks/useItems";
+import { type Item } from "../../services/itemService";
 import { getBrandById, type Brand } from "../../services/brandService";
 
 type Props = {
   navigation: NativeStackNavigationProp<BrowseStackParamList, "Brand">;
   route: RouteProp<BrowseStackParamList, "Brand">;
 };
+
+function groupBySubtype(items: Item[]): { title: string; data: Item[] }[] {
+  const map: Record<string, Item[]> = {};
+  for (const item of items) {
+    const key = item.subtypes?.name ?? "Other";
+    if (!map[key]) map[key] = [];
+    map[key].push(item);
+  }
+  return Object.entries(map)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([title, data]) => ({ title, data }));
+}
 
 export default function BrandScreen({ navigation, route }: Props) {
   const { brandId } = route.params;
@@ -54,11 +68,10 @@ export default function BrandScreen({ navigation, route }: Props) {
   const logoUri = getLogoUri();
 
   return (
-    <FlatList
-      className="bg-white"
-      data={items}
+    <SectionList
+      sections={groupBySubtype(items)}
       keyExtractor={(item) => item.id}
-      contentContainerClassName="pb-8"
+      contentContainerStyle={{ paddingBottom: 32 }}
       ListHeaderComponent={
         <View className="px-4 pt-4 pb-4 border-b border-gray-100">
           {/* Logo */}
@@ -87,23 +100,32 @@ export default function BrandScreen({ navigation, route }: Props) {
           ) : null}
         </View>
       }
-      ListEmptyComponent={
-        <Text className="text-center text-gray-400 py-8">No items yet.</Text>
-      }
+      renderSectionHeader={({ section }) => (
+        <View className="bg-white px-4 py-2 border-b border-gray-100">
+          <Text className="font-semibold text-sm text-gray-500 uppercase tracking-wide">
+            {section.title}
+          </Text>
+        </View>
+      )}
       renderItem={({ item }) => (
         <TouchableOpacity
-          className="bg-gray-50 mx-4 mt-3 rounded-xl px-4 py-3 flex-row items-center justify-between"
+          className="flex-row items-center justify-between px-4 py-3 border-b border-gray-50"
           onPress={() => navigation.navigate("Item", { itemId: item.id })}
         >
-          <View>
-            <Text className="font-semibold">{item.model_name}</Text>
+          <View className="flex-1 mr-3">
+            <Text className="font-medium" numberOfLines={2}>{item.model_name}</Text>
             <Text className="text-sm text-gray-500 capitalize">
               {item.subtypes?.name ?? item.category}
             </Text>
           </View>
-          <Text className="text-gray-400">›</Text>
+          <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
         </TouchableOpacity>
       )}
+      ListEmptyComponent={
+        <View className="items-center justify-center py-16">
+          <Text className="text-gray-400">No items yet</Text>
+        </View>
+      }
     />
   );
 }
