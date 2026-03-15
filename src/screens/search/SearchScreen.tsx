@@ -49,6 +49,20 @@ export default function SearchScreen() {
         </TouchableOpacity>
       ),
     },
+    {
+      title: "People",
+      data: results.profiles,
+      renderItem: ({ item }: any) => (
+        <TouchableOpacity
+          className="flex-row items-center py-3 px-4 border-b border-gray-100"
+          onPress={() =>
+            navigation.navigate("PublicCloset", { userId: item.id })
+          }
+        >
+          <Text className="font-medium">@{item.username}</Text>
+        </TouchableOpacity>
+      ),
+    },
   ].filter((s) => s.data.length > 0);
 
   const hasQuery = query.trim().length > 0;
@@ -59,7 +73,7 @@ export default function SearchScreen() {
       <View className="p-4 border-b border-gray-100">
         <TextInput
           className="bg-gray-100 rounded-xl px-4 py-3 text-base"
-          placeholder="Search brands or items…"
+          placeholder="Search brands, items, or people…"
           value={query}
           onChangeText={runSearch}
           autoCapitalize="none"

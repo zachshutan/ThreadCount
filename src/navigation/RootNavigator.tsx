@@ -10,7 +10,7 @@ import RankingComparisonScreen from "../screens/compare/RankingComparisonScreen"
 
 export type RootStackParamList = {
   MainTabs: undefined;
-  PublicCloset: undefined;
+  PublicCloset: { userId: string };
   RankingComparison: {
     newEntryId: string;
     userId: string;
