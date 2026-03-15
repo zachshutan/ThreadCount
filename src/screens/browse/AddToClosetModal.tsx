@@ -97,7 +97,7 @@ export default function AddToClosetModal({
         <Text className="text-xl font-bold mb-4">Add to Closet</Text>
 
         {/* Color picker */}
-        <Text className="font-semibold mb-2">Color</Text>
+        <Text className="font-semibold mb-2">Color (Optional)</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6">
           {/* None chip — default selection */}
           <TouchableOpacity
