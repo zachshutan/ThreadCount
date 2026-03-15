@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert, TextInput, ScrollView } from "reac
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../hooks/useAuth";
 import { signOut } from "../../services/authService";
-import { supabase } from "../../lib/supabase";
+import { updateUsername } from "../../services/followService";
 
 export default function SettingsScreen() {
   const { user } = useAuth();
@@ -12,10 +12,7 @@ export default function SettingsScreen() {
 
   async function handleSaveUsername() {
     if (!user || !username.trim()) return;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ username: username.trim() })
-      .eq("id", user.id);
+    const { error } = await updateUsername(user.id, username.trim());
     if (error) {
       Alert.alert("Error", "Could not update username.");
     } else {

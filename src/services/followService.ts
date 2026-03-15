@@ -70,3 +70,14 @@ export async function getFollowingCount(userId: string): Promise<number> {
     .eq("follower_id", userId);
   return count ?? 0;
 }
+
+export async function updateUsername(
+  userId: string,
+  newUsername: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ username: newUsername })
+    .eq("id", userId);
+  return { error: error?.message ?? null };
+}
