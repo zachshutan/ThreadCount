@@ -1,4 +1,4 @@
-import { createScoreRow, incrementScore, setCategoryRank, recalculateCategoryScores } from "../../services/scoreService";
+import { createScoreRow, incrementScore, setCategoryRank, recalculateCategoryScores, fetchRankedPeers } from "../../services/scoreService";
 import { supabase } from "../../lib/supabase";
 import {
   calculateOverallScore,
@@ -166,5 +166,60 @@ describe("recalculateCategoryScores", () => {
 
     expect(updateMock).toHaveBeenCalledTimes(1);
     expect(updateMock.mock.calls[0][0].overall_score).toBeCloseTo(10.0);
+  });
+});
+
+describe("fetchRankedPeers", () => {
+  it("returns ranked peers ordered by category_rank", async () => {
+    const rows = [
+      { closet_entry_id: "entry-1", category_rank: 1, closet_entries: { items: { model_name: "Nike Air Max" } } },
+      { closet_entry_id: "entry-2", category_rank: 2, closet_entries: { items: { model_name: "Adidas Stan Smith" } } },
+    ];
+
+    const orderMock = jest.fn().mockResolvedValue({ data: rows, error: null });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+    mockFrom.mockReturnValue({ select: selectMock });
+
+    const result = await fetchRankedPeers("user-1", "footwear");
+
+    expect(supabase.from).toHaveBeenCalledWith("scores");
+    expect(selectMock).toHaveBeenCalled();
+    expect(eq1Mock).toHaveBeenCalledWith("user_id", "user-1");
+    expect(eq2Mock).toHaveBeenCalledWith("category", "footwear");
+    expect(notMock).toHaveBeenCalledWith("category_rank", "is", null);
+    expect(orderMock).toHaveBeenCalledWith("category_rank", { ascending: true });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ id: "entry-1", modelName: "Nike Air Max", imageUrl: null });
+    expect(result[1]).toEqual({ id: "entry-2", modelName: "Adidas Stan Smith", imageUrl: null });
+  });
+
+  it("returns empty array when no ranked peers exist", async () => {
+    const orderMock = jest.fn().mockResolvedValue({ data: [], error: null });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+    mockFrom.mockReturnValue({ select: selectMock });
+
+    const result = await fetchRankedPeers("user-1", "top");
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array on query error", async () => {
+    const orderMock = jest.fn().mockResolvedValue({ data: null, error: { message: "DB error" } });
+    const notMock = jest.fn().mockReturnValue({ order: orderMock });
+    const eq2Mock = jest.fn().mockReturnValue({ not: notMock });
+    const eq1Mock = jest.fn().mockReturnValue({ eq: eq2Mock });
+    const selectMock = jest.fn().mockReturnValue({ eq: eq1Mock });
+    mockFrom.mockReturnValue({ select: selectMock });
+
+    const result = await fetchRankedPeers("user-1", "top");
+
+    expect(result).toEqual([]);
   });
 });

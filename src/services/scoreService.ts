@@ -5,6 +5,7 @@ import {
   calculateConfidence,
   calculateScoreFromRank,
 } from "../lib/scoring";
+import type { RankedPeer } from "../lib/binarySearchRanker";
 
 type ScoreRow = {
   id: string;
@@ -73,6 +74,32 @@ export async function incrementScore(params: {
       updated_at: new Date().toISOString(),
     })
     .eq("id", row.id);
+}
+
+/**
+ * Fetches all ranked items (category_rank IS NOT NULL) for a user+category,
+ * ordered by category_rank ascending. Returns them as RankedPeer[] for use
+ * with the binary search ranker.
+ */
+export async function fetchRankedPeers(
+  userId: string,
+  category: "top" | "bottom" | "footwear"
+): Promise<RankedPeer[]> {
+  const { data, error } = await supabase
+    .from("scores")
+    .select("closet_entry_id, category_rank, closet_entries(items(model_name))")
+    .eq("user_id", userId)
+    .eq("category", category)
+    .not("category_rank", "is", null)
+    .order("category_rank", { ascending: true });
+
+  if (error || !data) return [];
+
+  return data.map((row: any) => ({
+    id: row.closet_entry_id,
+    modelName: row.closet_entries?.items?.model_name ?? "Unknown item",
+    imageUrl: null,
+  }));
 }
 
 /**

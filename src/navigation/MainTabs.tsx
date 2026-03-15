@@ -8,7 +8,6 @@ import ItemScreen from "../screens/browse/ItemScreen";
 import ClosetScreen from "../screens/closet/ClosetScreen";
 import ItemDetailScreen from "../screens/closet/ItemDetailScreen";
 import WriteReviewScreen from "../screens/closet/WriteReviewScreen";
-import ComparisonScreen from "../screens/compare/ComparisonScreen";
 import SearchScreen from "../screens/search/SearchScreen";
 
 export type BrowseStackParamList = {
@@ -27,7 +26,6 @@ export type MainTabsParamList = {
   Home: undefined;
   Browse: undefined;
   Closet: undefined;
-  Compare: undefined;
   Search: undefined;
 };
 
@@ -61,7 +59,6 @@ export default function MainTabs() {
       <Tab.Screen name="Home" component={ForYouFeedScreen} />
       <Tab.Screen name="Browse" component={BrowseNavigator} />
       <Tab.Screen name="Closet" component={ClosetNavigator} />
-      <Tab.Screen name="Compare" component={ComparisonScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
     </Tab.Navigator>
   );

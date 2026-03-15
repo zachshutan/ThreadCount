@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, Alert, Modal,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NavigationProp } from "@react-navigation/native";
 import { useAuth } from "../../hooks/useAuth";
 import { addToCloset, upgradeToOwned } from "../../services/closetService";
 import { createScoreRow } from "../../services/scoreService";
 import { getItemById } from "../../services/itemService";
 import type { ClosetEntry } from "../../services/closetService";
+import type { RootStackParamList } from "../../navigation/RootNavigator";
 
 const COLORS = [
   "black", "white", "grey", "navy", "brown", "tan",
@@ -26,6 +29,7 @@ export default function AddToClosetModal({
   visible, itemId, existingEntry, onClose, onAdded,
 }: Props) {
   const { user } = useAuth();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [selectedColor, setSelectedColor] = useState<string>(
     existingEntry?.color ?? "black"
   );
@@ -59,6 +63,20 @@ export default function AddToClosetModal({
             userId: user.id,
             category: itemResult.data.category,
           });
+
+          // Fire onAdded callback (updates button state) then close modal
+          onAdded(entry, true);
+          onClose();
+
+          // Navigate to ranking session
+          navigation.navigate("RankingComparison", {
+            newEntryId: entry.id,
+            userId: user.id,
+            category: itemResult.data.category,
+            itemName: itemResult.data.model_name,
+            subtypeName: itemResult.data.subtypes?.name ?? itemResult.data.category,
+          });
+          return;
         }
       }
 

@@ -6,8 +6,21 @@ import { useAuth } from "../context/AuthContext";
 import AuthStack from "./AuthStack";
 import MainTabs from "./MainTabs";
 import PublicClosetScreen from "../screens/PublicClosetScreen";
+import RankingComparisonScreen from "../screens/compare/RankingComparisonScreen";
 
-const RootStack = createNativeStackNavigator();
+export type RootStackParamList = {
+  MainTabs: undefined;
+  PublicCloset: undefined;
+  RankingComparison: {
+    newEntryId: string;
+    userId: string;
+    category: "top" | "bottom" | "footwear";
+    itemName: string;
+    subtypeName: string;
+  };
+};
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { session, loading } = useAuth();
@@ -30,6 +43,11 @@ export default function RootNavigator() {
             name="PublicCloset"
             component={PublicClosetScreen}
             options={{ headerShown: true, title: "Closet", presentation: "modal" }}
+          />
+          <RootStack.Screen
+            name="RankingComparison"
+            component={RankingComparisonScreen}
+            options={{ presentation: "fullScreenModal", gestureEnabled: false }}
           />
         </RootStack.Navigator>
       ) : (

@@ -34,3 +34,18 @@ export async function recordComparison(params: {
 
   return { error: null };
 }
+
+export async function recordRankingComparison(params: {
+  userId: string;
+  winnerEntryId: string;
+  loserEntryId: string;
+}): Promise<ComparisonResult> {
+  const { error } = await supabase.from("comparisons").insert({
+    user_id: params.userId,
+    winner_entry_id: params.winnerEntryId,
+    loser_entry_id: params.loserEntryId,
+    comparison_type: "ranking",
+  });
+
+  return { error: error ?? null };
+}
