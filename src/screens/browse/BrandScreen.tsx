@@ -25,13 +25,13 @@ export default function BrandScreen({ navigation, route }: Props) {
     });
   }, [brandId]);
 
-  // Determine logo source: prefer logo_url, fall back to Clearbit when website_url is available
+  // Determine logo source: prefer logo_url, fall back to logo.dev when website_url is available
   function getLogoUri(): string | null {
     if (brand?.logo_url) return brand.logo_url;
     if (brand?.website_url) {
       try {
         const domain = new URL(brand.website_url).hostname;
-        return `https://logo.clearbit.com/${domain}`;
+        return `https://img.logo.dev/${domain}?token=${process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN}`;
       } catch {
         return null;
       }
