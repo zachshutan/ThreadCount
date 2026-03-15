@@ -5,7 +5,7 @@ export type ClosetEntry = {
   user_id: string;
   item_id: string;
   entry_type: "owned" | "interested";
-  color: string;
+  color: string | null;
   created_at: string;
   items?: {
     id: string;
@@ -36,7 +36,7 @@ export async function addToCloset(params: {
   userId: string;
   itemId: string;
   entryType: "owned" | "interested";
-  color: string;
+  color: string | null;
 }): Promise<QueryResult<ClosetEntry>> {
   const { data, error } = await supabase
     .from("closet_entries")
@@ -54,7 +54,7 @@ export async function addToCloset(params: {
 
 export async function upgradeToOwned(
   entryId: string,
-  color: string
+  color: string | null
 ): Promise<QueryResult<ClosetEntry>> {
   const { data, error } = await supabase
     .from("closet_entries")

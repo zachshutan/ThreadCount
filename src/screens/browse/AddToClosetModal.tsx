@@ -30,8 +30,8 @@ export default function AddToClosetModal({
 }: Props) {
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [selectedColor, setSelectedColor] = useState<string>(
-    existingEntry?.color ?? "black"
+  const [selectedColor, setSelectedColor] = useState<string | null>(
+    existingEntry?.color ?? null
   );
   const [loading, setLoading] = useState(false);
 
@@ -99,6 +99,15 @@ export default function AddToClosetModal({
         {/* Color picker */}
         <Text className="font-semibold mb-2">Color</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6">
+          {/* None chip — default selection */}
+          <TouchableOpacity
+            className={`mr-2 px-3 py-2 rounded-full border ${
+              selectedColor === null ? "bg-gray-200 border-gray-400" : "border-gray-300"
+            }`}
+            onPress={() => setSelectedColor(null)}
+          >
+            <Text className="text-sm text-gray-500">— None</Text>
+          </TouchableOpacity>
           {COLORS.map((color) => (
             <TouchableOpacity
               key={color}

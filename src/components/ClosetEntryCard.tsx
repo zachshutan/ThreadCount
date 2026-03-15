@@ -24,7 +24,8 @@ export default function ClosetEntryCard({ entry, onPress }: Props) {
           {entry.items?.model_name ?? "Unknown item"}
         </Text>
         <Text className="text-sm text-gray-500 capitalize">
-          {entry.items?.brands?.name ?? "Unknown brand"} · {entry.color}
+          {entry.items?.brands?.name ?? "Unknown brand"}
+          {entry.color ? ` · ${entry.color}` : ""}
           {subtypeName ? ` · ${subtypeName}` : ""}
         </Text>
       </View>
