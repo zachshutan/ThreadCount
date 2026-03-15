@@ -46,7 +46,7 @@ const ClosetStack = createNativeStackNavigator<ClosetStackParamList>();
 function BrowseNavigator() {
   return (
     <BrowseStack.Navigator>
-      <BrowseStack.Screen name="BrowseList" component={BrowseScreen} options={{ title: "Browse" }} />
+      <BrowseStack.Screen name="BrowseList" component={BrowseScreen} options={{ headerShown: false }} />
       <BrowseStack.Screen name="Brand" component={BrandScreen} options={({ route }) => ({ title: route.params.brandName })} />
       <BrowseStack.Screen name="Item" component={ItemScreen} options={{ title: "Item" }} />
     </BrowseStack.Navigator>
@@ -56,7 +56,7 @@ function BrowseNavigator() {
 function ClosetNavigator() {
   return (
     <ClosetStack.Navigator>
-      <ClosetStack.Screen name="ClosetList" component={ClosetScreen} options={{ title: "My Closet" }} />
+      <ClosetStack.Screen name="ClosetList" component={ClosetScreen} options={{ headerShown: false }} />
       <ClosetStack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ title: "Item Details" }} />
       <ClosetStack.Screen name="WriteReview" component={WriteReviewScreen} options={{ title: "Write Review" }} />
     </ClosetStack.Navigator>
