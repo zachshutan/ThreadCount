@@ -3,6 +3,7 @@ import {
   View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useFeed } from "../../hooks/useFeed";
 import type { FeedEvent } from "../../services/feedService";
 
@@ -93,9 +94,25 @@ export default function ForYouFeedScreen() {
         }
         ListEmptyComponent={
           !loading && !refreshing ? (
-            <Text className="text-center text-gray-400 mt-12">
-              {friendsOnly ? "Follow someone to see their activity." : "No activity yet."}
-            </Text>
+            <View className="flex-1 items-center justify-center px-8 pt-16">
+              <Ionicons name={friendsOnly ? "people-outline" : "shirt-outline"} size={48} color="#d1d5db" />
+              <Text className="text-lg font-semibold text-gray-800 mt-4 text-center">
+                {friendsOnly ? "No friends activity yet" : "Nothing here yet"}
+              </Text>
+              <Text className="text-sm text-gray-400 mt-2 text-center">
+                {friendsOnly
+                  ? "Follow people to see what they're wearing and ranking."
+                  : "Add items to your closet and start ranking them to see activity here."}
+              </Text>
+              {friendsOnly && (
+                <TouchableOpacity
+                  className="mt-6 bg-black px-6 py-3 rounded-full"
+                  onPress={() => navigation.navigate("Search")}
+                >
+                  <Text className="text-white font-semibold text-sm">Find people to follow</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           ) : null
         }
       />

@@ -7,6 +7,7 @@ export type Brand = {
   slug: string;
   website_url?: string | null;
   description?: string | null;
+  item_count?: number;
 };
 
 type PaginationOptions = { page: number; pageSize: number };
@@ -20,11 +21,17 @@ export async function getBrands(
 
   const { data, error, count } = await supabase
     .from("brands")
-    .select("id, name, logo_url, slug, website_url", { count: "exact" })
+    .select("id, name, logo_url, slug, website_url, items(count)", { count: "exact" })
     .order("name", { ascending: true })
     .range(from, to);
 
-  return { data, error, count: count ?? 0 };
+  const mapped = (data as any[] | null)?.map((b) => ({
+    ...b,
+    item_count: Array.isArray(b.items) ? (b.items[0]?.count ?? 0) : 0,
+    items: undefined,
+  })) ?? null;
+
+  return { data: mapped, error, count: count ?? 0 };
 }
 
 type SingleResult<T> = { data: T | null; error: { message: string } | null };

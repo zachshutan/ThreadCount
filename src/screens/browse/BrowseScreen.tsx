@@ -59,6 +59,9 @@ export default function BrowseScreen({ navigation }: Props) {
               )}
             </View>
             <Text className="font-semibold text-sm text-center" numberOfLines={2}>{item.name}</Text>
+            {item.item_count != null && (
+              <Text className="text-xs text-gray-400 mt-0.5">{item.item_count} item{item.item_count !== 1 ? "s" : ""}</Text>
+            )}
           </TouchableOpacity>
         );
       }}

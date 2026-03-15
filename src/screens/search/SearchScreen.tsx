@@ -1,13 +1,25 @@
 import React from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, SectionList, ActivityIndicator,
+  View, Text, TextInput, TouchableOpacity, SectionList, ActivityIndicator, ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { useSearch } from "../../hooks/useSearch";
+import { useBrands } from "../../hooks/useBrands";
+
+const DISCOVER_CATEGORIES = [
+  { label: "T-Shirts", icon: "shirt-outline" as const },
+  { label: "Hoodies", icon: "cloud-outline" as const },
+  { label: "Pants", icon: "reorder-three-outline" as const },
+  { label: "Sneakers", icon: "footsteps-outline" as const },
+  { label: "Jackets", icon: "umbrella-outline" as const },
+  { label: "Shorts", icon: "sunny-outline" as const },
+];
 
 export default function SearchScreen() {
   const navigation = useNavigation<any>();
   const { query, results, loading, runSearch } = useSearch();
+  const { brands } = useBrands();
 
   const sections = [
     {
@@ -84,7 +96,47 @@ export default function SearchScreen() {
       {loading ? (
         <ActivityIndicator className="mt-8" />
       ) : !hasQuery ? (
-        <Text className="text-center text-gray-400 mt-12">Start typing to search.</Text>
+        <ScrollView contentContainerClassName="pb-8">
+          {/* Browse Brands */}
+          {brands.length > 0 && (
+            <View className="mt-5 px-4">
+              <Text className="font-semibold text-base mb-3">Browse Brands</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {brands.slice(0, 6).map((brand) => (
+                  <TouchableOpacity
+                    key={brand.id}
+                    className="px-4 py-2 bg-gray-100 rounded-full"
+                    onPress={() =>
+                      navigation.navigate("Browse", {
+                        screen: "Brand",
+                        params: { brandId: brand.id, brandName: brand.name },
+                      })
+                    }
+                  >
+                    <Text className="text-sm font-medium text-gray-700">{brand.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Discover by category */}
+          <View className="mt-6 px-4">
+            <Text className="font-semibold text-base mb-3">Discover</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {DISCOVER_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat.label}
+                  className="flex-row items-center gap-2 px-4 py-2 border border-gray-200 rounded-full"
+                  onPress={() => runSearch(cat.label)}
+                >
+                  <Ionicons name={cat.icon} size={14} color="#6b7280" />
+                  <Text className="text-sm text-gray-600">{cat.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
       ) : sections.length === 0 ? (
         <Text className="text-center text-gray-400 mt-12">No results for "{query}"</Text>
       ) : (
