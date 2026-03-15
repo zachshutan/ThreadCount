@@ -2,7 +2,7 @@ import React from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, ActivityIndicator,
 } from "react-native";
-import { useRoute, useNavigation, type RouteProp } from "@react-navigation/native";
+import { useRoute, useNavigation, type RouteProp, useFocusEffect } from "@react-navigation/native";
 import { useCloset } from "../../hooks/useCloset";
 import { useItemReviews } from "../../hooks/useItemReviews";
 
@@ -23,7 +23,13 @@ export default function ItemDetailScreen() {
 
   const entry = entries.find((e) => e.id === closetEntryId);
 
-  const { reviews, loading: reviewsLoading } = useItemReviews(entry?.item_id ?? "");
+  const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useItemReviews(entry?.item_id ?? "");
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshReviews();
+    }, [refreshReviews])
+  );
 
   if (closetLoading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;

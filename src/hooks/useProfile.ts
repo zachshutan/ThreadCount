@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getProfile, getFollowerCount, getFollowingCount } from "../services/followService";
 
 type Profile = { id: string; username: string; avatar_url: string | null };
@@ -9,8 +9,9 @@ export function useProfile(userId: string) {
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadProfile = useCallback(() => {
     if (!userId) return;
+    setLoading(true);
     Promise.all([
       getProfile(userId),
       getFollowerCount(userId),
@@ -23,5 +24,9 @@ export function useProfile(userId: string) {
     });
   }, [userId]);
 
-  return { profile, followerCount, followingCount, loading };
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  return { profile, followerCount, followingCount, loading, refresh: loadProfile };
 }

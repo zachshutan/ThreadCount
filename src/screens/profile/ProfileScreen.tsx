@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../hooks/useAuth";
 import { useProfile } from "../../hooks/useProfile";
@@ -14,8 +15,14 @@ type Props = {
 
 export default function ProfileScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { profile, followerCount, followingCount, loading: profileLoading } = useProfile(user?.id ?? "");
+  const { profile, followerCount, followingCount, loading: profileLoading, refresh: refreshProfile } = useProfile(user?.id ?? "");
   const { owned, interested, loading: closetLoading } = useCloset();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshProfile();
+    }, [refreshProfile])
+  );
 
   if (profileLoading || closetLoading) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
