@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import {
-  View, Text, SectionList, FlatList, TouchableOpacity,
+  View, Text, FlatList, TouchableOpacity,
   ActivityIndicator, ScrollView,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { ClosetStackParamList } from "../../navigation/MainTabs";
 import { useCloset } from "../../hooks/useCloset";
 import ClosetEntryCard from "../../components/ClosetEntryCard";
+import { getSortedOwnedFlat } from "../../lib/closetUtils";
 import type { ClosetEntry } from "../../services/closetService";
 
 type Props = {
@@ -17,7 +18,7 @@ type Props = {
 type Tab = "owned" | "interested";
 
 export default function ClosetScreen({ navigation }: Props) {
-  const { owned, interested, ownedBySubtype, subtypeNames, loading, error, refresh } = useCloset();
+  const { entries, owned, interested, subtypeNames, loading, error, refresh } = useCloset();
   const [activeTab, setActiveTab] = useState<Tab>("owned");
   const [activeSubtype, setActiveSubtype] = useState<string | null>(null);
 
@@ -31,10 +32,7 @@ export default function ClosetScreen({ navigation }: Props) {
     return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
   }
 
-  // Filter sections for the owned tab based on selected subtype pill
-  const visibleSections = activeSubtype
-    ? ownedBySubtype.filter((s) => s.subtypeName === activeSubtype)
-    : ownedBySubtype;
+  const sortedOwned = getSortedOwnedFlat(entries, activeSubtype);
 
   return (
     <View className="flex-1 bg-white">
@@ -98,25 +96,15 @@ export default function ClosetScreen({ navigation }: Props) {
               </Text>
             </View>
           ) : (
-            <SectionList
-              sections={visibleSections}
+            <FlatList
+              data={sortedOwned}
               keyExtractor={(item) => item.id}
-              contentContainerClassName="pb-8"
-              stickySectionHeadersEnabled={false}
-              renderSectionHeader={({ section }) => (
-                <View className="px-4 pt-5 pb-2">
-                  <Text className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                    {section.subtypeName}
-                  </Text>
-                </View>
-              )}
+              contentContainerClassName="px-4 pt-3 pb-8 gap-2"
               renderItem={({ item }: { item: ClosetEntry }) => (
-                <View className="px-4 pb-2">
-                  <ClosetEntryCard
-                    entry={item}
-                    onPress={() => navigation.navigate("ItemDetail", { closetEntryId: item.id })}
-                  />
-                </View>
+                <ClosetEntryCard
+                  entry={item}
+                  onPress={() => navigation.navigate("ItemDetail", { closetEntryId: item.id })}
+                />
               )}
               ListEmptyComponent={
                 <View className="flex-1 items-center justify-center px-6 pt-16">

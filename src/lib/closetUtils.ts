@@ -38,6 +38,31 @@ export function groupOwnedBySubtype(entries: ClosetEntry[]): SubtypeSection[] {
 }
 
 /**
+ * Returns owned entries as a single flat list sorted by overall_score descending.
+ * Unranked items (null score) are placed at the bottom.
+ * Optionally filtered to a single subtype name (from the filter pill selection).
+ */
+export function getSortedOwnedFlat(
+  entries: ClosetEntry[],
+  subtypeFilter: string | null
+): ClosetEntry[] {
+  let owned = entries.filter((e) => e.entry_type === "owned");
+  if (subtypeFilter) {
+    owned = owned.filter(
+      (e) => (e.items?.subtypes?.name ?? "Other") === subtypeFilter
+    );
+  }
+  return owned.sort((a, b) => {
+    const scoreA = a.scores?.overall_score ?? null;
+    const scoreB = b.scores?.overall_score ?? null;
+    if (scoreA === null && scoreB === null) return 0;
+    if (scoreA === null) return 1;
+    if (scoreB === null) return -1;
+    return scoreB - scoreA;
+  });
+}
+
+/**
  * Returns all unique subtype names from owned entries (alphabetically sorted).
  * Used to render the subcategory filter pills.
  */
