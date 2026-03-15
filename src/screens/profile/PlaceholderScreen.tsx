@@ -13,8 +13,7 @@ export default function PlaceholderScreen() {
   return (
     <View className="flex-1 bg-white items-center justify-center px-8">
       <Ionicons name="construct-outline" size={48} color="#d1d5db" />
-      <Text className="text-xl font-bold text-gray-900 mt-4 text-center">{title}</Text>
-      <Text className="text-sm text-gray-400 mt-2 text-center leading-relaxed">
+      <Text className="text-sm text-gray-400 mt-4 text-center leading-relaxed">
         This page is coming soon. We're working on it.
       </Text>
     </View>
