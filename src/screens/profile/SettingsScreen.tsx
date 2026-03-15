@@ -126,14 +126,14 @@ export default function SettingsScreen() {
       {/* HELP & SUPPORT */}
       <SectionHeader title="Help & Support" />
       <View className="px-4">
-        <SettingsRow icon="help-circle-outline" label="FAQ / Help center" onPress={() => comingSoon("Help center")} />
+        <SettingsRow icon="help-circle-outline" label="FAQ / Help center" onPress={() => navigation.navigate("Placeholder", { title: "FAQ & Help" })} />
         <SettingsRow
           icon="bug-outline"
           label="Report a bug"
           onPress={() => Linking.openURL("mailto:support@threadcount.app?subject=Bug Report")}
         />
-        <SettingsRow icon="document-text-outline" label="Terms of Service" onPress={() => comingSoon("Terms of Service")} />
-        <SettingsRow icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => comingSoon("Privacy Policy")} />
+        <SettingsRow icon="document-text-outline" label="Terms of Service" onPress={() => navigation.navigate("Placeholder", { title: "Terms of Service" })} />
+        <SettingsRow icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => navigation.navigate("Placeholder", { title: "Privacy Policy" })} />
       </View>
 
       {/* DANGER ZONE */}
