@@ -8,6 +8,11 @@ type Props = {
 };
 
 export default function ClosetEntryCard({ entry, onPress }: Props) {
+  const CATEGORY_LABELS: Record<string, string> = {
+    top: "tops",
+    bottom: "bottoms",
+    footwear: "footwear",
+  };
   const score = entry.scores ?? null;
   const rank = score?.category_rank ?? null;
   const overallScore = score?.overall_score ?? null;
@@ -35,7 +40,9 @@ export default function ClosetEntryCard({ entry, onPress }: Props) {
           // Ranked item: show badge + score
           <View className="items-end">
             <View className="bg-black rounded-full px-3 py-1 mb-1">
-              <Text className="text-white text-xs font-bold">#{rank}</Text>
+              <Text className="text-white text-xs font-bold">
+                #{rank}{entry.items?.category ? ` ${CATEGORY_LABELS[entry.items.category] ?? entry.items.category}` : ""}
+              </Text>
             </View>
             <Text className="text-lg font-bold">{overallScore?.toFixed(1) ?? "—"}</Text>
           </View>
