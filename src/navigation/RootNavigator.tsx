@@ -6,11 +6,14 @@ import { useAuth } from "../context/AuthContext";
 import AuthStack from "./AuthStack";
 import MainTabs from "./MainTabs";
 import PublicClosetScreen from "../screens/PublicClosetScreen";
+import PostDetailScreen from "../screens/feed/PostDetailScreen";
 import RankingComparisonScreen from "../screens/compare/RankingComparisonScreen";
+import type { FeedEvent } from "../services/feedService";
 
 export type RootStackParamList = {
   MainTabs: undefined;
   PublicCloset: { userId: string };
+  PostDetail: { event: FeedEvent };
   RankingComparison: {
     newEntryId: string;
     userId: string;
@@ -44,6 +47,11 @@ export default function RootNavigator() {
             name="PublicCloset"
             component={PublicClosetScreen}
             options={{ headerShown: true, title: "Closet", presentation: "modal" }}
+          />
+          <RootStack.Screen
+            name="PostDetail"
+            component={PostDetailScreen}
+            options={{ headerShown: false, presentation: "modal" }}
           />
           <RootStack.Screen
             name="RankingComparison"
