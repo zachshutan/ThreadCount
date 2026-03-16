@@ -57,12 +57,21 @@ const BrowseStack = createNativeStackNavigator<BrowseStackParamList>();
 const ClosetStack = createNativeStackNavigator<ClosetStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 
+// Header policy:
+//   - Tab root screens (BrowseList, ClosetList, ProfileHome, ForYouFeed, Search):
+//     headerShown: false — they render their own custom top bar or need no header.
+//   - Stack push screens: get the native back button automatically from
+//     createNativeStackNavigator. No manual back button needed.
+//   - Modal screens (PostDetail, PublicCloset, RankingComparison):
+//     PostDetail uses a custom close icon; RankingComparison uses custom back
+//     handling via BackHandler. Both are intentional for their UX flow.
 function BrowseNavigator() {
   return (
     <BrowseStack.Navigator>
       <BrowseStack.Screen name="BrowseList" component={BrowseScreen} options={{ headerShown: false }} />
       <BrowseStack.Screen name="Brand" component={BrandScreen} options={({ route }) => ({ title: route.params.brandName })} />
-      <BrowseStack.Screen name="Item" component={ItemScreen} options={{ title: "Item" }} />
+      {/* Title is set dynamically in ItemScreen via navigation.setOptions once the item loads */}
+      <BrowseStack.Screen name="Item" component={ItemScreen} options={{ title: "" }} />
     </BrowseStack.Navigator>
   );
 }

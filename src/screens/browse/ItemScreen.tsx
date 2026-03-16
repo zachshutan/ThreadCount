@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View, Text, ScrollView, ActivityIndicator, Image,
 } from "react-native";
-import { RouteProp, useFocusEffect } from "@react-navigation/native";
+import { RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import { BrowseStackParamList } from "../../navigation/MainTabs";
 import { useItem } from "../../hooks/useItem";
 import { useItemImages } from "../../hooks/useItemImages";
@@ -16,9 +16,18 @@ type Props = {
 
 export default function ItemScreen({ route }: Props) {
   const { itemId } = route.params;
+  const navigation = useNavigation();
   const { item, scores, loading, error } = useItem(itemId);
   const { images } = useItemImages(itemId);
   const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useItemReviews(itemId);
+
+  // Update navigator header title to show the actual item name once loaded.
+  // This gives the back button proper context (e.g. "< ABC Jogger").
+  useEffect(() => {
+    if (item?.model_name) {
+      navigation.setOptions({ title: item.model_name });
+    }
+  }, [item?.model_name, navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
