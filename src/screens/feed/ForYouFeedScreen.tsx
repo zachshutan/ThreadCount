@@ -6,6 +6,32 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFeed } from "../../hooks/useFeed";
 import type { FeedEvent } from "../../services/feedService";
+import ScoreBadge from "../../components/ScoreBadge";
+
+// Returns a short relative time string: "just now", "2h ago", "3d ago", etc.
+function relativeTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
+
+const EVENT_ICON: Record<FeedEvent["event_type"], React.ComponentProps<typeof Ionicons>["name"]> = {
+  closet_add: "shirt-outline",
+  comparison: "bar-chart-outline",
+  review: "chatbubble-outline",
+};
+
+const EVENT_COPY: Record<FeedEvent["event_type"], string> = {
+  closet_add: "added to their closet",
+  comparison: "rated",
+  review: "reviewed",
+};
 
 function EventCard({
   event,
@@ -18,45 +44,79 @@ function EventCard({
   onItemPress?: () => void;
   onCardPress?: () => void;
 }) {
-  const descriptionParts: Record<FeedEvent["event_type"], { prefix: string; suffix: string }> = {
-    closet_add: { prefix: "added ", suffix: " to their closet" },
-    comparison: {
-      prefix: "rated ",
-      suffix: ` — ${event.overall_score?.toFixed(1) ?? "?"}/10`,
-    },
-    review: { prefix: "reviewed ", suffix: "" },
-  };
-
-  const { prefix, suffix } = descriptionParts[event.event_type];
+  const copy = EVENT_COPY[event.event_type];
+  const icon = EVENT_ICON[event.event_type];
+  const isComparison = event.event_type === "comparison";
+  const isReview = event.event_type === "review";
 
   return (
-    <TouchableOpacity onPress={onCardPress} activeOpacity={0.95}>
-      <View className="p-4 border-b border-gray-100">
-        <View className="flex-row items-center mb-1 flex-wrap">
-          <TouchableOpacity onPress={onUserPress}>
-            <Text className="font-semibold text-sm">{event.username}</Text>
-          </TouchableOpacity>
-          <Text className="text-gray-500 text-sm ml-1">
-            {prefix}
-            <Text
-              className={`font-semibold${onItemPress ? " underline" : ""}`}
-              onPress={onItemPress}
-            >
-              {event.item_name}
-            </Text>
-            {suffix}
-          </Text>
+    <TouchableOpacity
+      onPress={onCardPress}
+      activeOpacity={0.92}
+      style={{
+        marginHorizontal: 12,
+        marginBottom: 10,
+        backgroundColor: "#FAFAF8",
+        borderRadius: 14,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+        elevation: 1,
+      }}
+    >
+      <View style={{ padding: 14 }}>
+        {/* Top row: icon + username + action copy + score badge */}
+        <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1, flexWrap: "wrap", gap: 4 }}>
+            <Ionicons name={icon} size={14} color="#9CA3AF" style={{ marginRight: 2, marginTop: 1 }} />
+            <TouchableOpacity onPress={onUserPress}>
+              <Text style={{ fontWeight: "700", fontSize: 14, color: "#111" }}>
+                {event.username}
+              </Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 14, color: "#6B7280" }}>{copy}</Text>
+          </View>
+          {isComparison && event.overall_score != null && (
+            <ScoreBadge score={event.overall_score} size="sm" />
+          )}
         </View>
+
+        {/* Item name */}
+        <TouchableOpacity onPress={onItemPress} style={{ marginTop: 6 }} disabled={!onItemPress}>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: "#111" }} numberOfLines={1}>
+            {event.item_name}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Brand · category */}
         {event.brand_name && (
-          <Text className="text-xs text-gray-400">
+          <Text style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
             {event.brand_name} · {event.category}
           </Text>
         )}
-        {event.event_type === "review" && event.review_body && (
-          <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>
+
+        {/* Review snippet */}
+        {isReview && event.review_body && (
+          <Text
+            style={{
+              fontSize: 13,
+              color: "#6B7280",
+              marginTop: 8,
+              fontStyle: "italic",
+              lineHeight: 18,
+            }}
+            numberOfLines={2}
+          >
             "{event.review_body}"
           </Text>
         )}
+
+        {/* Timestamp */}
+        <Text style={{ fontSize: 11, color: "#C4C4C4", marginTop: 8 }}>
+          {event.created_at ? relativeTime(event.created_at) : ""}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -82,7 +142,7 @@ export default function ForYouFeedScreen() {
   return (
     <View className="flex-1 bg-white">
       {/* Everyone / Friends toggle */}
-      <View className="flex-row p-3 border-b border-gray-100">
+      <View className="flex-row px-3 pt-3 pb-2 border-b border-gray-100">
         {(["Everyone", "Friends"] as const).map((label, i) => {
           const active = i === 0 ? !friendsOnly : friendsOnly;
           return (
@@ -93,7 +153,7 @@ export default function ForYouFeedScreen() {
               }`}
               onPress={() => setFilter(i === 1)}
             >
-              <Text className={`font-semibold text-sm ${active ? "text-white" : "text-gray-600"}`}>
+              <Text className={`font-semibold text-sm ${active ? "text-white" : "text-gray-500"}`}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -104,6 +164,7 @@ export default function ForYouFeedScreen() {
       <FlatList
         data={events}
         keyExtractor={(e) => e.event_id}
+        contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
         renderItem={({ item: event }) => (
           <EventCard
             event={event}
