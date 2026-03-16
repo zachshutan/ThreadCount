@@ -40,7 +40,7 @@ export async function isFollowing(
 export async function getPublicCloset(userId: string) {
   const { data, error } = await supabase
     .from("closet_entries")
-    .select("*, items(id, model_name, category, brands(name), subtypes(name)), scores(overall_score, category_score, confidence)")
+    .select("*, items(id, model_name, category, brands(name), subtypes(name)), scores(overall_score, category_score, category_rank, confidence)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   return { data, error };
