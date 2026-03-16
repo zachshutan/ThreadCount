@@ -69,25 +69,33 @@ export default function ItemScreen({ route }: Props) {
 
         {/* Ratings summary — always show something */}
         {scores && scores.scorer_count >= 3 ? (
-          <View className="flex-row gap-3 mb-6">
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-2xl font-bold">
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
+            {/* Top score tile — warm amber tint */}
+            <View style={{
+              flex: 1, backgroundColor: "#FFF8E7", borderRadius: 14,
+              padding: 14, alignItems: "center",
+              borderWidth: 1, borderColor: "#F0D88A",
+            }}>
+              <Text style={{ fontSize: 28, fontWeight: "800", color: "#C8941A" }}>
                 {scores.avg_overall?.toFixed(1) ?? "—"}
               </Text>
-              <Text className="text-xs text-gray-500">Avg score</Text>
+              <Text style={{ fontSize: 11, color: "#A07820", marginTop: 2, fontWeight: "600" }}>Avg score</Text>
             </View>
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-2xl font-bold">{scores.scorer_count}</Text>
-              <Text className="text-xs text-gray-500">Ratings</Text>
+            <View style={{ flex: 1, backgroundColor: "#FAFAF8", borderRadius: 14, padding: 14, alignItems: "center" }}>
+              <Text style={{ fontSize: 28, fontWeight: "800", color: "#111" }}>{scores.scorer_count}</Text>
+              <Text style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Ratings</Text>
             </View>
-            <View className="flex-1 bg-gray-50 rounded-xl p-3 items-center">
-              <Text className="text-2xl font-bold">{reviews.length}</Text>
-              <Text className="text-xs text-gray-500">Reviews</Text>
+            <View style={{ flex: 1, backgroundColor: "#FAFAF8", borderRadius: 14, padding: 14, alignItems: "center" }}>
+              <Text style={{ fontSize: 28, fontWeight: "800", color: "#111" }}>{reviews.length}</Text>
+              <Text style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Reviews</Text>
             </View>
           </View>
         ) : (
-          <View className="flex-row items-center gap-3 mb-6 bg-gray-50 rounded-xl px-4 py-3">
-            <Text className="text-sm text-gray-500">
+          <View style={{
+            flexDirection: "row", alignItems: "center", marginBottom: 24,
+            backgroundColor: "#FAFAF8", borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+          }}>
+            <Text style={{ fontSize: 14, color: "#9CA3AF" }}>
               {scores && scores.scorer_count > 0
                 ? `${scores.scorer_count} rating${scores.scorer_count === 1 ? "" : "s"}`
                 : "No ratings yet"}
@@ -102,29 +110,68 @@ export default function ItemScreen({ route }: Props) {
         <AddToClosetButton itemId={itemId} />
 
         {/* Reviews section */}
-        <View className="mt-8">
-          <Text className="text-lg font-bold mb-4">Reviews</Text>
+        <View style={{ marginTop: 32 }}>
+          {/* Section header */}
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#9CA3AF", letterSpacing: 1.2, textTransform: "uppercase" }}>
+              Reviews
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: "#F0EDE8", marginLeft: 10 }} />
+          </View>
+
           {reviewsLoading ? (
             <ActivityIndicator />
           ) : reviews.length === 0 ? (
-            <View className="bg-gray-50 rounded-xl px-4 py-5 items-center">
-              <Text className="font-semibold text-base mb-1">Be the first to review</Text>
-              <Text className="text-sm text-gray-500 text-center">
+            <View style={{ backgroundColor: "#FAFAF8", borderRadius: 14, padding: 20, alignItems: "center" }}>
+              <Text style={{ fontWeight: "600", fontSize: 15, color: "#374151", marginBottom: 6 }}>Be the first to review</Text>
+              <Text style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", lineHeight: 18 }}>
                 Add this item to your closet, then share how it fits, feels, and holds up.
               </Text>
             </View>
           ) : (
-            reviews.map((review) => (
-              <View key={review.id} className="border-b border-gray-100 pb-4 mb-4">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="font-semibold text-sm">@{review.profiles?.username ?? "Unknown"}</Text>
-                  <Text className="text-xs text-gray-400">
-                    Fit {review.fit_rating}/5 · Quality {review.quality_rating}/5
-                  </Text>
+            reviews.map((review) => {
+              const initials = (review.profiles?.username ?? "?").slice(0, 2).toUpperCase();
+              return (
+                <View
+                  key={review.id}
+                  style={{
+                    backgroundColor: "#FAFAF8",
+                    borderRadius: 14,
+                    padding: 14,
+                    marginBottom: 10,
+                  }}
+                >
+                  {/* Reviewer row */}
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+                    {/* Initials avatar */}
+                    <View style={{
+                      width: 34, height: 34, borderRadius: 17,
+                      backgroundColor: "#E8E4DC", alignItems: "center", justifyContent: "center",
+                      marginRight: 10,
+                    }}>
+                      <Text style={{ fontSize: 12, fontWeight: "700", color: "#6B5F45" }}>{initials}</Text>
+                    </View>
+                    <Text style={{ fontWeight: "600", fontSize: 14, color: "#111", flex: 1 }}>
+                      @{review.profiles?.username ?? "Unknown"}
+                    </Text>
+                    {/* Fit + Quality pills */}
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <View style={{ backgroundColor: "#F3F0EA", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 11, color: "#6B5F45", fontWeight: "600" }}>
+                          Fit {review.fit_rating}/5
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: "#F3F0EA", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 11, color: "#6B5F45", fontWeight: "600" }}>
+                          Quality {review.quality_rating}/5
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 14, color: "#374151", lineHeight: 20 }}>{review.body}</Text>
                 </View>
-                <Text className="text-sm text-gray-700 leading-5">{review.body}</Text>
-              </View>
-            ))
+              );
+            })
           )}
         </View>
       </View>

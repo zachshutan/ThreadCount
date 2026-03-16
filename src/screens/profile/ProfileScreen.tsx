@@ -87,9 +87,23 @@ export default function ProfileScreen({ navigation }: Props) {
 
       {/* Owned items list — sorted by ranking score, unranked at bottom */}
       <View className="px-4 pt-2 pb-8">
-        <Text className="font-bold text-base mb-3">Recently Ranked</Text>
+        {/* Section header */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ fontSize: 11, fontWeight: "700", color: "#9CA3AF", letterSpacing: 1.2, textTransform: "uppercase" }}>
+            My Closet
+          </Text>
+          <View style={{ flex: 1, height: 1, backgroundColor: "#F0EDE8", marginLeft: 10 }} />
+        </View>
+
         {owned.length === 0 ? (
-          <Text className="text-gray-400 text-sm">No owned items yet.</Text>
+          <View style={{ paddingVertical: 32, alignItems: "center" }}>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: "#374151", marginBottom: 6 }}>
+              Your closet is empty
+            </Text>
+            <Text style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", lineHeight: 18 }}>
+              Browse brands, add items you own, and start ranking them to build your closet.
+            </Text>
+          </View>
         ) : (
           [...owned]
             .sort((a, b) => {
@@ -101,7 +115,7 @@ export default function ProfileScreen({ navigation }: Props) {
               return sb - sa;
             })
             .map((entry) => (
-              <View key={entry.id} className="mb-2">
+              <View key={entry.id} style={{ marginBottom: 8 }}>
                 <ClosetEntryCard
                   entry={entry}
                   onPress={() =>

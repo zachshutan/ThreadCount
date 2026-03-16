@@ -119,6 +119,10 @@ export default function MainTabs() {
         tabBarActiveTintColor: "#000",
         tabBarInactiveTintColor: "#9ca3af",
         tabBarShowLabel: true,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: "#F0EDE8",
+        },
       })}
     >
       <Tab.Screen name="Home" component={ForYouFeedScreen} />
